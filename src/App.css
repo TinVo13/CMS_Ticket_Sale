@@ -1,3 +1,21 @@
 .App {
   display: flex;
 }
+.ant-select-selection-placeholder {
+  color:#EDE6E6;
+}
+.page-title{
+  font-size: 36px;
+  line-height: 54px;
+  font-weight: 700;
+}
+.ant-table-thead .ant-table-cell {
+  background-color: #F1F4F8 !important;
+  color: black !important;
+}
+.table-row-light {
+  background-color: #ffffff;
+}
+.table-row-dark {
+  background-color: #F1F4F8;
+}

@@ -1,11 +1,11 @@
 import React from 'react'
 import { ConfigProvider, Menu, Layout } from 'antd';
-import {HomeOutlined,DesktopOutlined,FileOutlined} from '@ant-design/icons';
-import {useNavigate} from 'react-router-dom';
+import { HomeOutlined, DesktopOutlined, FileOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import type { MenuProps } from 'antd';
 
 type MenuItem = Required<MenuProps>['items'][number];
-const { Sider} = Layout;
+const { Sider } = Layout;
 
 function getItem(
   label: React.ReactNode,
@@ -33,31 +33,33 @@ const Sidebar: React.FC = () => {
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: '#FFB800'
+          colorPrimary: '#FFB800',
+          colorBgContainer:'#F9F6F4',
         }
       }}>
-        <Sider
-          theme='light'
-          breakpoint="lg"
-          collapsedWidth="0"
-          onBreakpoint={(broken) => {
-            console.log(broken);
-          }}
-          onCollapse={(collapsed, type) => {
-            console.log(collapsed, type);
-          }}
-        >
-          <div className="demo-logo-vertical" >
-            Logo here!
-          </div>
-          <Menu
-            theme="light"
-            mode="inline"
-            defaultSelectedKeys={['4']}
-            items={items}
-            onClick={(items)=>navigate(items.key)}
-          />
-        </Sider>
+      <Sider
+        theme='light'
+        breakpoint="lg"
+        collapsedWidth="0"
+        onBreakpoint={(broken) => {
+          console.log(broken);
+        }}
+        onCollapse={(collapsed, type) => {
+          console.log(collapsed, type);
+        }}
+        style={{background:'#F9F6F4'}}
+      >
+        <div className="demo-logo-vertical" >
+          Logo here!
+        </div>
+        <Menu
+          theme="light"
+          mode="inline"
+          defaultSelectedKeys={['/']}
+          items={items}
+          onClick={(items) => navigate(items.key)}
+        />
+      </Sider>
     </ConfigProvider>
   )
 }
