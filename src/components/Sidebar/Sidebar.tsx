@@ -1,5 +1,5 @@
 import React from 'react'
-import { ConfigProvider, Menu, Layout } from 'antd';
+import { ConfigProvider, Menu, Layout, Image } from 'antd';
 import { HomeOutlined, DesktopOutlined, FileOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import type { MenuProps } from 'antd';
@@ -50,7 +50,7 @@ const Sidebar: React.FC = () => {
         style={{background:'#F9F6F4'}}
       >
         <div className="demo-logo-vertical" >
-          Logo here!
+          <Image src={require('../../assets/insight.png')} preview={false} onClick={()=>navigate('/')}/>
         </div>
         <Menu
           theme="light"

@@ -8,6 +8,11 @@ const Topbar: React.FC = () => {
       theme={{
         token: {
           colorPrimary: '#FFB800',
+        },
+        components:{
+          Input:{
+            colorBgContainer:'#EDEDED'
+          }
         }
       }}>
       <Layout style={{padding:'0 8px'}}>
@@ -16,7 +21,7 @@ const Topbar: React.FC = () => {
             color='#EDE6E6'
             placeholder='Search'
             suffix={<SearchOutlined />}
-            style={{ width: 400,}} />
+            style={{ width: 470,}} />
           <Space direction='horizontal'>
             <MailOutlined />
             <BellOutlined />
