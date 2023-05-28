@@ -3,37 +3,28 @@ import { Button, Col, ConfigProvider, DatePicker, Input, Layout, Radio, RadioCha
 import { SearchOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/es/table';
 import { TicketCheckType } from '../../types/type';
+import { DocumentData, QuerySnapshot, onSnapshot } from 'firebase/firestore';
+import { ticketCheckPackageCollection } from '../../firebase/controller';
 
-const datas: TicketCheckType[] = [
-  {
-    key:'1',
-    soVe: '23438483',
-    tenLoaiVe: 'Vé cổng',
-    ngaySuDung: '14/02/2023',
-    congCheckIn: 'Cổng 1',
-    doiSoat:'Đã đối soát'
-  },
-  {
-    key:'2',
-    soVe: '83647289',
-    tenLoaiVe: 'Vé cổng',
-    ngaySuDung: '14/02/2023',
-    congCheckIn: 'Cổng 2',
-    doiSoat:'Chưa đối soát'
-  },
-  {
-    key:'3',
-    soVe: '74384382',
-    tenLoaiVe: 'Vé cổng',
-    ngaySuDung: '14/02/2023',
-    congCheckIn: 'Cổng 3',
-    doiSoat:'Đã đối soát'
-  },
-]
 const { Text } = Typography;
 const TicketCheck: React.FC = () => {
   const [searchValue, setSearchValue] = React.useState<string>('');
   const [value,setValue] = React.useState<string>('');
+  const [ticketCheck,setTicketCheck] = React.useState<TicketCheckType[]>();
+
+
+  React.useEffect(() => {
+    onSnapshot(ticketCheckPackageCollection, (snapshot: QuerySnapshot<DocumentData>) => {
+        setTicketCheck(
+            snapshot.docs.map((doc) => {
+                return {
+                    key: doc.id,
+                    ...doc.data()
+                }
+            })
+        )
+    })
+}, [])
   const columns: ColumnsType<TicketCheckType> = [
     {
       title: 'STT',
@@ -70,8 +61,8 @@ const TicketCheck: React.FC = () => {
       key:'doiSoat',
       render:(_,record)=>(
         <Space>
-          {record.doiSoat.includes('Đã đối soát')&&<Text type='danger' italic>{record.doiSoat}</Text>}
-          {record.doiSoat.includes('Chưa đối soát')&&<Text type='secondary' italic>{record.doiSoat}</Text>}
+          {record.doiSoat?.includes('Đã đối soát')&&<Text type='danger' italic>{record.doiSoat}</Text>}
+          {record.doiSoat?.includes('Chưa đối soát')&&<Text type='secondary' italic>{record.doiSoat}</Text>}
         </Space>
       )
     }
@@ -110,7 +101,7 @@ const TicketCheck: React.FC = () => {
                 </Col>
               </Row>
               <Table
-                dataSource={datas}
+                dataSource={ticketCheck}
                 columns={columns}
                 pagination={{pageSize:6}}/>
             </Space>

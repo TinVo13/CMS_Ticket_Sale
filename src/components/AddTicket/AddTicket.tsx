@@ -1,92 +1,170 @@
 import React from 'react'
 import { Button, Checkbox, Col, DatePicker, Form, Input, Modal, Row, Select, Space, TimePicker, Typography } from 'antd'
-import { TicketType } from '../../types/type';
+import { TicketPackageType } from '../../types/type';
 
 interface ModelProps {
     isOpen: boolean,
     isClose: (e: React.MouseEvent<HTMLButtonElement>) => void,
-    handleAddTicket: (ticket: TicketType) => void
+    handleAddTicket: (ticket: TicketPackageType) => void
 }
 const { Text } = Typography;
 const AddTicket: React.FC<ModelProps> = ({ isOpen, isClose, handleAddTicket }) => {
+    const [ticketPackage, setTicketPackage] = React.useState<TicketPackageType>({
+        giaCombo: "",
+        giaVe: "",
+        key: "",
+        maGoi: "",
+        ngayApDung: "",
+        ngayHetHan: "",
+        tenGoiVe: "",
+        tinhTrang: ""
+    });
     return (
         <Modal
             title={(
                 <Row justify={'center'}>
-                    <Text style={{ fontSize: 24, color: 'black' }} strong>Lọc vé</Text>
+                    <Text style={{ fontSize: 24, color: 'black' }} strong>Thêm gói vé</Text>
                 </Row>
             )}
             centered
             open={isOpen}
-            footer={true}
-            closable={true}
+            footer={false}
         >
             <Form
-                onFinish={(value: TicketType) => handleAddTicket(value)}>
-                <Space style={{ width: '100%' }} direction='vertical'>
-                    <Row>
-                        <Col span={12}>
-                            <Space direction='vertical'>
-                                <Text>Tên gói vé<Text type='danger'>*</Text></Text>
-                                <Form.Item
-                                    name={'tenGoiVe'}
-                                    rules={[
-                                        {
-                                            required: true,
-                                            message: 'Vui lòng nhập tên gói vé!'
-                                        }
-                                    ]}>
-                                    <Input placeholder='Nhập tên gói vé' />
-                                </Form.Item>
-                            </Space>
-                        </Col>
-                    </Row>
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Space direction='vertical'>
-                                <Text>Ngày áp dụng</Text>
-                                <div>
-                                    <Space>
-                                        <DatePicker format={'DD/MM/YY'} />
-                                        <TimePicker />
-                                    </Space>
-                                </div>
-                            </Space>
-                        </Col>
-                        <Col span={12}>
-                            <Space direction='vertical'>
-                                <Text>Ngày hết hạn</Text>
-                                <div>
-                                    <Space>
-                                        <DatePicker format={'DD/MM/YY'} />
-                                        <TimePicker />
-                                    </Space>
-                                </div>
-                            </Space>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Text>Giá vé áp dụng</Text>
-                    </Row>
-                    <Row>
-                        <Space>
-                            <Checkbox value={'giaVe'}>Vé lẻ (vnđ/vé) với giá</Checkbox>
-                            <Input type='text' placeholder='Giá vé' style={{ width: 100 }} />
-                            <Text>/vé</Text>
+                onFinish={() => handleAddTicket(ticketPackage)}>
+                <Row>
+                    <Col span={12}>
+                        <Space direction='vertical'>
+                            <Text>Tên gói vé<Text type='danger'>*</Text></Text>
+                            <Form.Item
+                                name={'tenGoiVe'}
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: 'Vui lòng nhập tên gói vé!'
+                                    }
+                                ]}>
+                                <Input placeholder='Nhập tên gói vé'
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTicketPackage({ ...ticketPackage, tenGoiVe: e.target.value })} />
+                            </Form.Item>
                         </Space>
-                    </Row>
-                    <Row>
-                        <Space>
-                            <Checkbox value={'giaCombo'}>Combo vé với giá</Checkbox>
-                            <Input type='text' placeholder='Giá vé' style={{ width: 100 }} />
-                            <Text>/</Text>
-                            <Input type='text' placeholder='Giá vé' style={{ width: 100 }} />
-                            <Text>vé</Text>
+                    </Col>
+                </Row>
+                <Row gutter={24}>
+                    <Col span={12}>
+                        <Space direction='vertical'>
+                            <Text>Ngày áp dụng</Text>
+                            <div>
+                                <Space>
+                                    <Form.Item
+                                        name={'ngayApDung'}
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message: 'Vui lòng điền vào!'
+                                            }
+                                        ]}>
+                                        <DatePicker format={'DD/MM/YY'}
+                                            onChange={(date: any, dateString) =>
+                                                setTicketPackage({ ...ticketPackage, ngayApDung: `${dateString} 00:00:00` })} />
+                                    </Form.Item>
+                                    <Form.Item
+                                        name={'gioApDung'}
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message: 'Vui lòng điền vào!'
+                                            }
+                                        ]}>
+                                        <TimePicker />
+                                    </Form.Item>
+                                </Space>
+                            </div>
                         </Space>
-                    </Row>
-                    <Row>
-                        <Space style={{ width: '100%' }} direction='vertical'>
-                            <Text>Tình trạng</Text>
+                    </Col>
+                    <Col span={12}>
+                        <Space direction='vertical'>
+                            <Text>Ngày hết hạn</Text>
+                            <div>
+                                <Space>
+                                    <Form.Item
+                                        name={'ngayHetHan'}
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message: 'Vui lòng điền vào!'
+                                            }
+                                        ]}>
+                                        <DatePicker format={'DD/MM/YY'}
+                                            onChange={(date: any, dateString) =>
+                                                setTicketPackage({ ...ticketPackage, ngayHetHan: `${dateString} 00:00:00` })} />
+                                    </Form.Item>
+                                    <Form.Item
+                                        name={'gioHetHan'}
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message: 'Vui lòng điền vào!'
+                                            }
+                                        ]}>
+                                        <TimePicker />
+                                    </Form.Item>
+                                </Space>
+                            </div>
+                        </Space>
+                    </Col>
+                </Row>
+                <Row>
+                    <Text>Giá vé áp dụng</Text>
+                </Row>
+                <Row>
+                    <Space>
+                        <Form.Item
+                            name={'giaVe'}
+                            rules={[
+                                {
+                                    required: true,
+                                    message: 'Vui lòng điền vào!'
+                                }
+                            ]}>
+                            <Space>
+                                <Checkbox value={'giaVe'} checked>Vé lẻ (vnđ/vé) với giá</Checkbox>
+                                <Input type='text' placeholder='Giá vé' style={{ width: 100 }} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTicketPackage({ ...ticketPackage, giaVe: e.target.value })} />
+                                <Text>/vé</Text>
+                            </Space>
+                        </Form.Item>
+                    </Space>
+                </Row>
+                <Row>
+                    <Space>
+                        <Form.Item
+                            name={'giaCombo'}
+                            rules={[
+                                {
+                                    required: true,
+                                    message: 'Vui lòng điền vào!'
+                                }
+                            ]}>
+                            <Space>
+                                <Checkbox value={'giaCombo'} checked>Combo vé với giá</Checkbox>
+                                <Input type='text' placeholder='Giá vé' style={{ width: 100 }} onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                    setTicketPackage({ ...ticketPackage, giaCombo: e.target.value })} />
+                                <Text>/</Text>
+                                <Input type='text' placeholder='Giá vé' style={{ width: 100 }} defaultValue={1} />
+                                <Text>vé</Text>
+                            </Space>
+                        </Form.Item>
+                    </Space>
+                </Row>
+                <Row>
+                    <Space style={{ width: '100%' }} direction='vertical'>
+                        <Text>Tình trạng</Text>
+                        <Form.Item
+                            name={'tinhTrang'}
+                            rules={[{
+                                required: true,
+                                message: 'Vui lòng điền vào!'
+                            }]}>
                             <Select options={[
                                 {
                                     value: 'Đang áp dụng',
@@ -97,24 +175,26 @@ const AddTicket: React.FC<ModelProps> = ({ isOpen, isClose, handleAddTicket }) =
                                     value: 'Tắt'
                                 }
                             ]}
-                                defaultValue={'Đang sử dụng'}
-                                style={{ width: 150, }} />
-                        </Space>
-                    </Row>
-                    <Row>
-                        <Text type='danger'>*<Text>là thông tin bắt buộc</Text></Text>
-                    </Row>
-                    <Row justify={'center'}>
-                        <Space>
-                            <Form.Item>
-                                <Button style={{width: 100,color:'#FFB800',fontWeight:'bold'}} onClick={(event: any) => isClose(event)}>Huy</Button>
-                            </Form.Item>
-                            <Form.Item>
-                                <Button htmlType='submit' style={{width:100,color:'white',background:'orange'}}>Lọc</Button>
-                            </Form.Item>
-                        </Space>
-                    </Row>
-                </Space>
+                                // defaultValue={'Đang sử dụng'}
+                                style={{ width: 150, }}
+                                onChange={(value) => setTicketPackage({ ...ticketPackage, tinhTrang: value })} />
+                        </Form.Item>
+                    </Space>
+                </Row>
+                    <Text type='danger'>*<Text>là thông tin bắt buộc</Text></Text>
+                <Row>
+                </Row>
+                <Row justify={'center'}>
+                    <Space>
+                        <Form.Item>
+                            <Button style={{ width: 100, color: '#FFB800', fontWeight: 'bold' }} onClick={(event: any) => isClose(event)}>Hủy</Button>
+                        </Form.Item>
+                        <Form.Item>
+                            <Button style={{ width: 100, color: 'white', background: 'orange' }} htmlType='submit'>Thêm</Button>
+                        </Form.Item>
+                    </Space>
+                </Row>
+                {/* </Space> */}
             </Form>
         </Modal>
     )

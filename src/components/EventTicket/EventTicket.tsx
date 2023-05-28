@@ -1,135 +1,73 @@
 import React from 'react'
-import { Badge, Button, Checkbox, Col, ConfigProvider, DatePicker, Input, Layout, Modal, Popover, Radio, Row, Space, Tag, Typography } from 'antd';
+import { Badge, Button, Checkbox, Col, ConfigProvider, DatePicker, Input, Layout, Modal, Popover, Radio, RadioChangeEvent, Row, Space, Tag, Typography } from 'antd';
 import Table, { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, MoreOutlined } from '@ant-design/icons';
-import { EventTicketType } from '../../types/type';
+import { TicketEventPackage } from '../../types/type';
+import { DocumentData, QuerySnapshot, onSnapshot } from 'firebase/firestore';
+import { ticketEventPackageCollection } from '../../firebase/controller';
+import { CheckboxValueType } from 'antd/es/checkbox/Group';
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import * as XLSX from 'xlsx';
 
-const datas: EventTicketType[] = [
-  {
-    key: '1',
-    soVe: 237434392,
-    tenSuKien: 'Hội chợ triễn lẵm tiêu dùng 2021',
-    bookingCode: "JASDJSDA",
-    congCheckIn: 'Cong 1',
-    ngaySuDung: '17/05/2023',
-    ngayXuatVe: '17/05/2023',
-    tinhTrangSuDung: 'Đã sử dụng'
-  },
-  {
-    key: '2',
-    soVe: 823299438,
-    tenSuKien: 'Hội chợ triễn lẵm tiêu dùng 2021',
-    bookingCode: "KIYDSDAN",
-    congCheckIn: 'Cong 1',
-    ngaySuDung: '17/05/2023',
-    ngayXuatVe: '17/05/2023',
-    tinhTrangSuDung: 'Đã sử dụng'
-  },
-  {
-    key: '3',
-    soVe: 823299438,
-    tenSuKien: 'Hội chợ triễn lẵm tiêu dùng 2021',
-    bookingCode: "KIYDSDAN",
-    congCheckIn: 'Cong 1',
-    ngaySuDung: '17/05/2023',
-    ngayXuatVe: '17/05/2023',
-    tinhTrangSuDung: 'Đã sử dụng'
-  },
-  {
-    key: '4',
-    soVe: 823299438,
-    tenSuKien: 'Hội chợ triễn lẵm tiêu dùng 2021',
-    bookingCode: "KIYDSDAN",
-    congCheckIn: 'Cong 1',
-    ngaySuDung: '17/05/2023',
-    ngayXuatVe: '17/05/2023',
-    tinhTrangSuDung: 'Đã sử dụng'
-  },
-  {
-    key: '5',
-    soVe: 823299438,
-    tenSuKien: 'Hội chợ triễn lẵm tiêu dùng 2021',
-    bookingCode: "KIYDSDAN",
-    congCheckIn: 'Cong 1',
-    ngaySuDung: '17/05/2023',
-    ngayXuatVe: '17/05/2023',
-    tinhTrangSuDung: 'Chưa sử dụng'
-  },
-  {
-    key: '6',
-    soVe: 823299438,
-    tenSuKien: 'Hội chợ triễn lẵm tiêu dùng 2021',
-    bookingCode: "KIYDSDAN",
-    congCheckIn: 'Cong 1',
-    ngaySuDung: '17/05/2023',
-    ngayXuatVe: '17/05/2023',
-    tinhTrangSuDung: 'Hết hạn'
-  },
-  {
-    key: '7',
-    soVe: 823299438,
-    tenSuKien: 'Hội chợ triễn lẵm tiêu dùng 2021',
-    bookingCode: "KIYDSDAN",
-    congCheckIn: 'Cong 1',
-    ngaySuDung: '17/05/2023',
-    ngayXuatVe: '17/05/2023',
-    tinhTrangSuDung: 'Chưa sử dụng'
-  },
-  {
-    key: '8',
-    soVe: 823299438,
-    tenSuKien: 'Hội chợ triễn lẵm tiêu dùng 2021',
-    bookingCode: "KIYDSDAN",
-    congCheckIn: 'Cong 1',
-    ngaySuDung: '17/05/2023',
-    ngayXuatVe: '17/05/2023',
-    tinhTrangSuDung: 'Hết hạn'
-  },
-  {
-    key: '9',
-    soVe: 823299438,
-    tenSuKien: 'Hội chợ triễn lẵm tiêu dùng 2021',
-    bookingCode: "KIYDSDAN",
-    congCheckIn: 'Cong 1',
-    ngaySuDung: '17/05/2023',
-    ngayXuatVe: '17/05/2023',
-    tinhTrangSuDung: 'Đã sử dụng'
-  },
-  {
-    key: '10',
-    tenSuKien: 'Hội chợ triễn lẵm tiêu dùng 2021',
-    soVe: 823299438,
-    bookingCode: "KIYDSDAN",
-    congCheckIn: 'Cong 1',
-    ngaySuDung: '17/05/2023',
-    ngayXuatVe: '17/05/2023',
-    tinhTrangSuDung: 'Đã sử dụng'
-  },
-  {
-    key: '11',
-    soVe: 823299438,
-    tenSuKien: 'Hội chợ triễn lẵm tiêu dùng 2021',
-    bookingCode: "KIYDSDAN",
-    congCheckIn: 'Cong 1',
-    ngaySuDung: '17/05/2023',
-    ngayXuatVe: '17/05/2023',
-    tinhTrangSuDung: 'Đã sử dụng'
-  },
-  {
-    key: '12',
-    soVe: 823299438,
-    tenSuKien: 'Hội chợ triễn lẵm tiêu dùng 2021',
-    bookingCode: "KIYDSDAN",
-    congCheckIn: 'Cong 1',
-    ngaySuDung: '17/05/2023',
-    ngayXuatVe: '17/05/2023',
-    tinhTrangSuDung: 'Đã sử dụng'
-  },
-]
+
+interface Filter {
+  tuNgay: string,
+  denNgay: string,
+  tinhTrangSuDung: string,
+  congCheckIn: CheckboxValueType[]
+}
 const { Text } = Typography;
 const EventTicket: React.FC = () => {
+  const listCongCheckIn = new Set<String>();
   const [searchValue, setSearchValue] = React.useState<string>("");
-  const columns: ColumnsType<EventTicketType> = [
+  const [disabled, setDisabled] = React.useState<boolean>(true);
+  const [selectedCheckboxes, setSelectedCheckboxes] = React.useState<string[]>([]);
+
+  const [filter, setFilter] = React.useState<Filter>({
+    tuNgay: '01/01/2001',
+    denNgay: '01/01/2001',
+    tinhTrangSuDung: 'Tất cả',
+    congCheckIn: ['Tất cả']
+  });
+  const handleConfirm = () => {
+    setModalOpen(false);
+    listCongCheckIn.forEach((value) => {
+      console.log(value);
+    })
+  }
+  const handleOnchange = (item: CheckboxChangeEvent) => {
+    // if (listCongCheckIn.has(item.target.value) || !item.target.checked) {
+    //     listCongCheckIn.delete(item.target.value);
+    //     return;
+    // }
+    // listCongCheckIn.add(item.target.value);
+    // console.log(listCongCheckIn);
+    //
+    const { value, checked } = item.target;
+    if (checked) {
+      setSelectedCheckboxes([...selectedCheckboxes, value]);
+    } else {
+      setSelectedCheckboxes(selectedCheckboxes.filter((option) => option !== value));
+    }
+  }
+  const handleDownloadCSV = () => {
+    const downloadExcel = () => {
+      const workSheet = XLSX.utils.json_to_sheet(ticketEventPackage!);
+      const workBook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workBook, workSheet, "Báo Cáo");
+      //Buffer
+      let buf = XLSX.write(workBook, {
+        bookType: "xlsx",
+        type: "buffer",
+      });
+      //Binary string
+      XLSX.write(workBook, { bookType: "xlsx", type: "binary" });
+      //Download
+      XLSX.writeFile(workBook, "QuanLyGoiSuKien.xlsx");
+    };
+    downloadExcel();
+  }
+  const columns: ColumnsType<TicketEventPackage> = [
     {
       title: 'STT',
       dataIndex: 'stt',
@@ -167,12 +105,27 @@ const EventTicket: React.FC = () => {
           {record.tinhTrangSuDung.includes('Chưa sử dụng') && <Tag color='success' bordered><Badge status='success' text={record.tinhTrangSuDung} style={{ color: '#03AC00' }} /></Tag>}
           {record.tinhTrangSuDung.includes('Hết hạn') && <Tag color='error' bordered><Badge status='error' text={record.tinhTrangSuDung} style={{ color: 'red' }} /></Tag>}
         </Space>
-      )
+      ),
+      filteredValue: [filter.tinhTrangSuDung],
+      onFilter: (value: any, record) => {
+        if (value === 'Tất cả') {
+          return record.tinhTrangSuDung;
+        } else {
+          return record.tinhTrangSuDung.includes(value)
+        }
+      }
     },
     {
       title: 'Ngày sử dụng',
       dataIndex: 'ngaySuDung',
       key: 'ngaySuDung',
+      filteredValue: [filter.tuNgay],
+      onFilter: (value: any, record) => {
+        var ngaySuDung = String(record.ngaySuDung);
+        var convertDate = new Date(ngaySuDung);
+        var valueDate = new Date(value);
+        return convertDate.valueOf() > valueDate.valueOf();
+      }
     },
     {
       title: 'Ngày xuất vé',
@@ -202,6 +155,19 @@ const EventTicket: React.FC = () => {
     }
   ]
   const [modalOpen, setModalOpen] = React.useState(false);
+  const [ticketEventPackage, setTicketEventPackage] = React.useState<TicketEventPackage[]>();
+  React.useEffect(() => {
+    onSnapshot(ticketEventPackageCollection, (snapshot: QuerySnapshot<DocumentData>) => {
+      setTicketEventPackage(
+        snapshot.docs.map((doc) => {
+          return {
+            key: doc.id,
+            ...doc.data()
+          }
+        })
+      )
+    })
+  }, [])
   return (
     <ConfigProvider
       theme={{
@@ -232,7 +198,7 @@ const EventTicket: React.FC = () => {
                 <Button style={{ fontWeight: 'bold' }} onClick={() => setModalOpen(true)}>
                   Lọc vé
                 </Button>
-                <Button style={{ fontWeight: 'bold' }}>
+                <Button style={{ fontWeight: 'bold' }} onClick={()=>handleDownloadCSV()}>
                   Xuất file (.CSV)
                 </Button>
               </Space>
@@ -240,8 +206,8 @@ const EventTicket: React.FC = () => {
           </Row>
           <Table
             size='middle'
-            pagination={{ pageSize: 7,position:['bottomCenter'] }}
-            dataSource={datas}
+            pagination={{ pageSize: 7, position: ['bottomCenter'] }}
+            dataSource={ticketEventPackage}
             columns={columns} />
         </Space>
         <Modal
@@ -252,7 +218,7 @@ const EventTicket: React.FC = () => {
           )}
           centered
           open={modalOpen}
-          footer={true}
+          footer={false}
           closable={false}
           onOk={() => setModalOpen(false)}
           onCancel={() => setModalOpen(false)}
@@ -262,34 +228,45 @@ const EventTicket: React.FC = () => {
               <Col md={12}>
                 <Space direction='vertical'>
                   <Text>Từ ngày</Text>
-                  <DatePicker format={'DD/MM/YYYY'} />
+                  <DatePicker format={'YYYY/MM/DD'} onChange={(date, dateString) => setFilter({ ...filter, tuNgay: dateString })} />
                 </Space>
               </Col>
               <Col span={12}>
                 <Space direction='vertical'>
                   <Text>Đến ngày</Text>
-                  <DatePicker format={"DD/MM/YYYY"} />
+                  <DatePicker format={"YYYY/MM/DD"} onChange={(date, dateString) => setFilter({ ...filter, denNgay: dateString })} />
                 </Space>
               </Col>
             </Row>
             <Text>Tình trạng sử dụng</Text>
-            <Radio.Group>
-              <Radio checked>Tất cả</Radio>
-              <Radio>Đã sử dụng</Radio>
-              <Radio>Chưa sử dụng</Radio>
-              <Radio>Hết hạn</Radio>
+            <Radio.Group onChange={(e: RadioChangeEvent) => setFilter({ ...filter, tinhTrangSuDung: e.target.value })}
+              defaultValue={'Tất cả'}>
+              <Radio value={'Tất cả'}>Tất cả</Radio>
+              <Radio value={'Đã sử dụng'}>Đã sử dụng</Radio>
+              <Radio value={'Chưa sử dụng'}>Chưa sử dụng</Radio>
+              <Radio value={'Hết hạn'}>Hết hạn</Radio>
             </Radio.Group>
             <Text>Cổng Check - in</Text>
-            <Checkbox.Group>
-              <Checkbox checked={false}>Tất cả</Checkbox>
-              <Checkbox>Cổng 1</Checkbox>
-              <Checkbox>Cổng 2</Checkbox>
-              <Checkbox>Cổng 3</Checkbox>
-              <Checkbox>Cổng 4</Checkbox>
-              <Checkbox>Cổng 5</Checkbox>
-            </Checkbox.Group>
+            <Row justify={'space-between'}>
+              <Checkbox defaultChecked onChange={(e: CheckboxChangeEvent) => {
+                e.target.checked ? setDisabled(true) : setDisabled(false);
+                listCongCheckIn.clear();
+              }}>Tất cả</Checkbox>
+              <Checkbox value={'Cổng 1'} disabled={disabled}
+                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 1</Checkbox>
+              <Checkbox value={'Cổng 2'} disabled={disabled}
+                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 2</Checkbox>
+            </Row>
+            <Row justify={'space-between'}>
+              <Checkbox value={'Cổng 3'} disabled={disabled}
+                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 3</Checkbox>
+              <Checkbox value={'Cổng 4'} disabled={disabled}
+                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 4</Checkbox>
+              <Checkbox value={'Cổng 5'} disabled={disabled}
+                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 5</Checkbox>
+            </Row>
             <Row justify={'center'}>
-              <Button>Lọc</Button>
+              <Button htmlType='submit' onClick={() => handleConfirm()}>Lọc</Button>
             </Row>
           </Space>
         </Modal>

@@ -1,29 +1,36 @@
 import React from 'react'
 import { Button, Col, ConfigProvider, Input, Layout, Row, Space, Table, Typography, theme } from 'antd';
 import { ColumnsType } from 'antd/es/table';
-import { TicketType } from '../../types/type';
+import { TicketPackage, TicketPackageType } from '../../types/type';
 import { SearchOutlined } from '@ant-design/icons';
 import AddTicket from '../../components/AddTicket/AddTicket';
+import { addPackage, ticketPackageCollection } from '../../firebase/controller';
+import { DocumentData, QuerySnapshot, onSnapshot } from 'firebase/firestore';
 
-const datas: TicketType[] = [
-  {
-    key:'1',
-    giaCombo: '360.000',
-    giaVe: '90.000',
-    maGoi: 'ALT94348',
-    ngayApDung: '14/02/2023',
-    ngayHetHan: '15/02/2023',
-    tenGoiVe: 'Gói gia đình',
-    tinhTrang: 'Đang sử dụng'
-  }
-]
 const { Text } = Typography;
 const Setting: React.FC = () => {
-  const [openModel,setOpenModel] = React.useState<boolean>(false);
-  const handleAddTicket=(ticket:TicketType)=>{
+  const [openModel, setOpenModel] = React.useState<boolean>(false);
+  const [ticketPackage, setTicketPackage] = React.useState<TicketPackage[]>();
+  const handleAddTicket = (ticket: TicketPackageType) => {
+    const number: number = Math.floor(Math.random() * 99999) + 10000;
+    ticket.key = String(number);
+    ticket.maGoi = "ALT" + number;
+    addPackage(ticket);
     setOpenModel(false);
   }
-  const columns: ColumnsType<TicketType> = [
+  React.useEffect(() => {
+    onSnapshot(ticketPackageCollection, (snapshot: QuerySnapshot<DocumentData>) => {
+      setTicketPackage(
+        snapshot.docs.map((doc) => {
+          return {
+            key: doc.id,
+            ...doc.data()
+          }
+        })
+      )
+    })
+  }, [])
+  const columns: ColumnsType<TicketPackage> = [
     {
       title: 'STT',
       render: (text, record, index) => (
@@ -96,17 +103,17 @@ const Setting: React.FC = () => {
             </Col>
             <Col>
               <Space>
-                <Button style={{ color: '#FFB800', fontWeight: 'bold' }} onClick={()=>setOpenModel(true)}>Xuất file (.csp)</Button>
-                <Button style={{ background: '#FFB800', color: 'white', fontWeight: 'bold' }}>Thêm gói vé</Button>
+                <Button style={{ color: '#FFB800', fontWeight: 'bold' }} >Xuất file (.csp)</Button>
+                <Button style={{ background: '#FFB800', color: 'white', fontWeight: 'bold' }} onClick={() => setOpenModel(true)}>Thêm gói vé</Button>
               </Space>
             </Col>
           </Row>
-          <Table dataSource={datas} columns={columns} />
+          <Table dataSource={ticketPackage} columns={columns} />
         </Space>
-        <AddTicket 
-        isOpen={openModel} 
-        isClose={()=>setOpenModel(false)}
-        handleAddTicket={(ticket:TicketType)=>handleAddTicket(ticket)}/>
+        <AddTicket
+          isOpen={openModel}
+          isClose={() => setOpenModel(false)}
+          handleAddTicket={(ticket: TicketPackageType) => handleAddTicket(ticket)} />
       </Layout>
     </ConfigProvider>
   )
