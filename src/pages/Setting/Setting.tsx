@@ -4,20 +4,28 @@ import { ColumnsType } from 'antd/es/table';
 import { TicketPackage, TicketPackageType } from '../../types/type';
 import { SearchOutlined } from '@ant-design/icons';
 import AddTicket from '../../components/AddTicket/AddTicket';
-import { addPackage, ticketPackageCollection } from '../../firebase/controller';
+import { ticketPackageCollection } from '../../firebase/controller';
 import { DocumentData, QuerySnapshot, onSnapshot } from 'firebase/firestore';
+import { useAppDispatch, useAppSelector } from '../../redux/store';
+import { getListTicketPackage, addTicketPackage } from '../../redux/features/ticketPackage.slice';
 
 const { Text } = Typography;
 const Setting: React.FC = () => {
   const [openModel, setOpenModel] = React.useState<boolean>(false);
   const [ticketPackage, setTicketPackage] = React.useState<TicketPackage[]>();
+  const [searchValue, setSearchValue] = React.useState<string>('');
+  const dispatch = useAppDispatch();
+
+  const data = useAppSelector(state => state.ticketPackageSlice);
+
   const handleAddTicket = (ticket: TicketPackageType) => {
     const number: number = Math.floor(Math.random() * 99999) + 10000;
     ticket.key = String(number);
     ticket.maGoi = "ALT" + number;
-    addPackage(ticket);
+    dispatch(addTicketPackage({ ticketPackage: ticket }));
     setOpenModel(false);
   }
+
   React.useEffect(() => {
     onSnapshot(ticketPackageCollection, (snapshot: QuerySnapshot<DocumentData>) => {
       setTicketPackage(
@@ -29,7 +37,12 @@ const Setting: React.FC = () => {
         })
       )
     })
-  }, [])
+  }, []);
+
+  React.useEffect(() => {
+    dispatch(getListTicketPackage({ list: ticketPackage! }));
+  });
+
   const columns: ColumnsType<TicketPackage> = [
     {
       title: 'STT',
@@ -45,7 +58,11 @@ const Setting: React.FC = () => {
     {
       title: 'Tên gói vé',
       dataIndex: 'tenGoiVe',
-      key: 'tenGoiVe'
+      key: 'tenGoiVe',
+      filteredValue: [searchValue],
+      onFilter: (value, record) => {
+        return String(record.tenGoiVe).toLowerCase().includes(String(value).toLowerCase());
+      }
     },
     {
       title: 'Ngày áp dụng',
@@ -60,12 +77,18 @@ const Setting: React.FC = () => {
     {
       title: 'Giá vé (VNĐ/Vé)',
       dataIndex: 'giaVe',
-      key: 'giaVe'
+      key: 'giaVe',
+      render: (_, record) => {
+        return record.giaVe + ' VNĐ'
+      }
     },
     {
       title: 'Giá combo (VNĐ/Combo)',
       dataIndex: 'giaCombo',
-      key: 'giaCombo'
+      key: 'giaCombo',
+      render: (_, record) => {
+        return record.giaCombo + ' VNĐ/1 vé';
+      }
     },
     {
       title: 'Tình trạng',
@@ -98,7 +121,8 @@ const Setting: React.FC = () => {
           <Row justify={'space-between'}>
             <Col>
               <Input
-                placeholder='Tìm bằng số vé'
+                placeholder='Tìm bằng tên gói vé'
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchValue(e.target.value)}
                 prefix={<SearchOutlined />} />
             </Col>
             <Col>
@@ -108,7 +132,7 @@ const Setting: React.FC = () => {
               </Space>
             </Col>
           </Row>
-          <Table dataSource={ticketPackage} columns={columns} />
+          <Table dataSource={data.settingList} columns={columns} />
         </Space>
         <AddTicket
           isOpen={openModel}

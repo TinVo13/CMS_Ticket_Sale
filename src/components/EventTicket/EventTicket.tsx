@@ -1,5 +1,5 @@
 import React from 'react'
-import { Badge, Button, Checkbox, Col, ConfigProvider, DatePicker, Input, Layout, Modal, Popover, Radio, RadioChangeEvent, Row, Space, Tag, Typography } from 'antd';
+import { Badge, Button, Checkbox, Col, ConfigProvider, DatePicker, Form, Input, Layout, Modal, Popover, Radio, Row, Space, Tag, Typography } from 'antd';
 import Table, { ColumnsType } from 'antd/es/table';
 import { SearchOutlined, MoreOutlined } from '@ant-design/icons';
 import { TicketEventPackage } from '../../types/type';
@@ -8,6 +8,10 @@ import { ticketEventPackageCollection } from '../../firebase/controller';
 import { CheckboxValueType } from 'antd/es/checkbox/Group';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import * as XLSX from 'xlsx';
+import dayjs from 'dayjs';
+import ChangeDateModal from '../Model/ChangeDateModal';
+import { useAppDispatch, useAppSelector } from '../../redux/store';
+import { getListTicketEventPackage, updateDateTicketEventPackage, updateStatusTicket } from '../../redux/features/ticketEventPackage.slice';
 
 
 interface Filter {
@@ -16,47 +20,44 @@ interface Filter {
   tinhTrangSuDung: string,
   congCheckIn: CheckboxValueType[]
 }
+const dateFormat = 'YYYY/MM/DD';
 const { Text } = Typography;
 const EventTicket: React.FC = () => {
-  const listCongCheckIn = new Set<String>();
+  const dispatch = useAppDispatch();
+  const data = useAppSelector((state)=>state.ticketEventPackageSlice);
+
   const [searchValue, setSearchValue] = React.useState<string>("");
   const [disabled, setDisabled] = React.useState<boolean>(true);
-  const [selectedCheckboxes, setSelectedCheckboxes] = React.useState<string[]>([]);
-
+  const [changeDateModalOpen, setChangeDateModalOpen] = React.useState<boolean>(false);
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [ticketEventPackage, setTicketEventPackage] = React.useState<TicketEventPackage[]>();
+  //filter để lọc vé
   const [filter, setFilter] = React.useState<Filter>({
     tuNgay: '01/01/2001',
-    denNgay: '01/01/2001',
+    denNgay: dayjs().format('YYYY/MM/DD').toString(),
     tinhTrangSuDung: 'Tất cả',
     congCheckIn: ['Tất cả']
   });
-  const handleConfirm = () => {
-    setModalOpen(false);
-    listCongCheckIn.forEach((value) => {
-      console.log(value);
-    })
-  }
-  const handleOnchange = (item: CheckboxChangeEvent) => {
-    // if (listCongCheckIn.has(item.target.value) || !item.target.checked) {
-    //     listCongCheckIn.delete(item.target.value);
-    //     return;
-    // }
-    // listCongCheckIn.add(item.target.value);
-    // console.log(listCongCheckIn);
-    //
-    const { value, checked } = item.target;
-    if (checked) {
-      setSelectedCheckboxes([...selectedCheckboxes, value]);
-    } else {
-      setSelectedCheckboxes(selectedCheckboxes.filter((option) => option !== value));
+  //lọc vé
+  const handleFinish = (fieldValues: any) => {
+    const values = {
+      ...fieldValues,
+      'tuNgay': fieldValues['tuNgay'].format('YYYY/MM/DD'),
+      'denNgay': fieldValues['denNgay'].format('YYYY/MM/DD'),
+      'tinhTrangSuDung': fieldValues['tinhTrangSuDung'],
+      'congCheckIn': fieldValues['congCheckIn']
     }
+    setFilter(values);
+    setModalOpen(false);
   }
+  //xuất file csv
   const handleDownloadCSV = () => {
     const downloadExcel = () => {
       const workSheet = XLSX.utils.json_to_sheet(ticketEventPackage!);
       const workBook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workBook, workSheet, "Báo Cáo");
       //Buffer
-      let buf = XLSX.write(workBook, {
+      XLSX.write(workBook, {
         bookType: "xlsx",
         type: "buffer",
       });
@@ -67,6 +68,35 @@ const EventTicket: React.FC = () => {
     };
     downloadExcel();
   }
+
+  //cập nhật ngày sử dụng
+  const handleChangeDate = (key: string, hanSuDung: string) => {
+    dispatch(updateDateTicketEventPackage({key:key,hanSuDung:hanSuDung}));
+    setChangeDateModalOpen(false);
+  }
+
+  //cập nhật tình trạng sử dụng
+  const handleUpdateEventTicketStatus = (key: string) => {
+    dispatch(updateStatusTicket({key:key}));
+  }
+  
+  React.useEffect(() => {
+    onSnapshot(ticketEventPackageCollection, (snapshot: QuerySnapshot<DocumentData>) => {
+      setTicketEventPackage(
+        snapshot.docs.map((doc) => {
+          return {
+            key: doc.id,
+            ...doc.data()
+          }
+        })
+      )
+    })
+  }, []);
+
+  React.useEffect(()=>{
+    dispatch(getListTicketEventPackage({list:ticketEventPackage!}));
+  });
+  //columns table
   const columns: ColumnsType<TicketEventPackage> = [
     {
       title: 'STT',
@@ -121,10 +151,10 @@ const EventTicket: React.FC = () => {
       key: 'ngaySuDung',
       filteredValue: [filter.tuNgay],
       onFilter: (value: any, record) => {
-        var ngaySuDung = String(record.ngaySuDung);
-        var convertDate = new Date(ngaySuDung);
-        var valueDate = new Date(value);
-        return convertDate.valueOf() > valueDate.valueOf();
+        var ngaySuDung = new Date(record.ngaySuDung?.toString()!);
+        var tuNgay = new Date(value.toString());
+        var denNgay = new Date(filter.denNgay.toString());
+        return tuNgay.valueOf() <= ngaySuDung.valueOf() && ngaySuDung.valueOf() <= denNgay.valueOf();
       }
     },
     {
@@ -136,6 +166,13 @@ const EventTicket: React.FC = () => {
       title: 'Cổng check - in',
       dataIndex: 'congCheckIn',
       key: 'congCheckIn',
+      filteredValue: ['Tất cả'],
+      onFilter: (value: string | number | boolean, record) => {
+        if (filter.congCheckIn.find((values) => values.valueOf() === value)) {
+          return record.congCheckIn;
+        }
+        return record.congCheckIn.includes(filter.congCheckIn.map((values) => values.toString()));
+      }
     },
     {
       dataIndex: 'options',
@@ -144,30 +181,32 @@ const EventTicket: React.FC = () => {
         <Space>
           <Popover content={(
             <Space direction='vertical'>
-              <Button type='ghost'>Sử dụng vé</Button>
-              <Button type='ghost'>Đổi ngày sử dụng</Button>
+              <Button type='ghost' onClick={() => handleUpdateEventTicketStatus(record.key!)}>
+                <Text strong>
+                  Sử dụng vé
+                </Text>
+              </Button>
+              <Button type='ghost' onClick={() => setChangeDateModalOpen(true)}>
+                <Text strong>
+                  Đổi ngày sử dụng
+                </Text>
+              </Button>
+              <ChangeDateModal
+                visible={changeDateModalOpen}
+                type='Family'
+                onCancel={() => setChangeDateModalOpen(false)}
+                onClose={() => setChangeDateModalOpen(false)}
+                data={record}
+                handleChangeDate={(key, hanSuDung) => handleChangeDate(key, hanSuDung)} />
             </Space>
-          )} trigger={'click'} color='#FFD2A8'>
+          )} trigger={'hover'} color='#FFD2A8' placement='topRight'>
             <MoreOutlined />
           </Popover>
         </Space>
       )
     }
   ]
-  const [modalOpen, setModalOpen] = React.useState(false);
-  const [ticketEventPackage, setTicketEventPackage] = React.useState<TicketEventPackage[]>();
-  React.useEffect(() => {
-    onSnapshot(ticketEventPackageCollection, (snapshot: QuerySnapshot<DocumentData>) => {
-      setTicketEventPackage(
-        snapshot.docs.map((doc) => {
-          return {
-            key: doc.id,
-            ...doc.data()
-          }
-        })
-      )
-    })
-  }, [])
+  
   return (
     <ConfigProvider
       theme={{
@@ -187,7 +226,7 @@ const EventTicket: React.FC = () => {
       <Layout>
         <Space direction='vertical'>
           <Row justify={'space-between'}>
-            <Col>
+            <Col span={9}>
               <Input
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchValue(e.target.value)}
                 placeholder='Tìm bằng số vé'
@@ -198,7 +237,7 @@ const EventTicket: React.FC = () => {
                 <Button style={{ fontWeight: 'bold' }} onClick={() => setModalOpen(true)}>
                   Lọc vé
                 </Button>
-                <Button style={{ fontWeight: 'bold' }} onClick={()=>handleDownloadCSV()}>
+                <Button style={{ fontWeight: 'bold' }} onClick={() => handleDownloadCSV()}>
                   Xuất file (.CSV)
                 </Button>
               </Space>
@@ -207,7 +246,7 @@ const EventTicket: React.FC = () => {
           <Table
             size='middle'
             pagination={{ pageSize: 7, position: ['bottomCenter'] }}
-            dataSource={ticketEventPackage}
+            dataSource={data.ticketEventList}
             columns={columns} />
         </Space>
         <Modal
@@ -223,52 +262,83 @@ const EventTicket: React.FC = () => {
           onOk={() => setModalOpen(false)}
           onCancel={() => setModalOpen(false)}
         >
-          <Space style={{ width: '100%' }} direction='vertical'>
+          <Form
+            initialValues={{
+              tuNgay: dayjs('2020/01/01', dateFormat),
+              denNgay: dayjs(),
+              tinhTrangSuDung: 'Tất cả',
+              congCheckIn: ['Tất cả']
+            }}
+            onFinish={handleFinish}>
             <Row>
               <Col md={12}>
-                <Space direction='vertical'>
+                <div>
                   <Text>Từ ngày</Text>
-                  <DatePicker format={'YYYY/MM/DD'} onChange={(date, dateString) => setFilter({ ...filter, tuNgay: dateString })} />
-                </Space>
+                  <Form.Item
+                    name={'tuNgay'}>
+                    <DatePicker
+                      format={'YYYY/MM/DD'}
+                    // onChange={(date, dateString) => { setFilter({ ...filter, tuNgay: dateString }) }} 
+                    />
+                  </Form.Item>
+                </div>
               </Col>
               <Col span={12}>
-                <Space direction='vertical'>
+                <div>
                   <Text>Đến ngày</Text>
-                  <DatePicker format={"YYYY/MM/DD"} onChange={(date, dateString) => setFilter({ ...filter, denNgay: dateString })} />
-                </Space>
+                  <Form.Item
+                    name={'denNgay'}>
+                    <DatePicker
+                      format={"YYYY/MM/DD"}
+                    // onChange={(date, dateString) => setFilter({ ...filter, denNgay: dateString })} 
+                    />
+                  </Form.Item>
+                </div>
               </Col>
             </Row>
             <Text>Tình trạng sử dụng</Text>
-            <Radio.Group onChange={(e: RadioChangeEvent) => setFilter({ ...filter, tinhTrangSuDung: e.target.value })}
-              defaultValue={'Tất cả'}>
-              <Radio value={'Tất cả'}>Tất cả</Radio>
-              <Radio value={'Đã sử dụng'}>Đã sử dụng</Radio>
-              <Radio value={'Chưa sử dụng'}>Chưa sử dụng</Radio>
-              <Radio value={'Hết hạn'}>Hết hạn</Radio>
-            </Radio.Group>
+            <Form.Item
+              name={'tinhTrangSuDung'}>
+              <Radio.Group>
+                <Radio value={'Tất cả'}>Tất cả</Radio>
+                <Radio value={'Đã sử dụng'}>Đã sử dụng</Radio>
+                <Radio value={'Chưa sử dụng'}>Chưa sử dụng</Radio>
+                <Radio value={'Hết hạn'}>Hết hạn</Radio>
+              </Radio.Group>
+            </Form.Item>
             <Text>Cổng Check - in</Text>
-            <Row justify={'space-between'}>
-              <Checkbox defaultChecked onChange={(e: CheckboxChangeEvent) => {
-                e.target.checked ? setDisabled(true) : setDisabled(false);
-                listCongCheckIn.clear();
-              }}>Tất cả</Checkbox>
-              <Checkbox value={'Cổng 1'} disabled={disabled}
-                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 1</Checkbox>
-              <Checkbox value={'Cổng 2'} disabled={disabled}
-                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 2</Checkbox>
-            </Row>
-            <Row justify={'space-between'}>
-              <Checkbox value={'Cổng 3'} disabled={disabled}
-                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 3</Checkbox>
-              <Checkbox value={'Cổng 4'} disabled={disabled}
-                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 4</Checkbox>
-              <Checkbox value={'Cổng 5'} disabled={disabled}
-                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 5</Checkbox>
-            </Row>
+            <Form.Item
+              name={'congCheckIn'}>
+              <Checkbox.Group>
+                <Row justify={'space-between'}>
+                  <Col span={8}>
+                    <Checkbox value="Tất cả" onChange={(e: CheckboxChangeEvent) => {
+                      e.target.checked ? setDisabled(true) : setDisabled(false)
+                    }}>Tất cả</Checkbox>
+                  </Col>
+                  <Col span={8}>
+                    <Checkbox value="Cổng 1" disabled={disabled}>Cổng 1</Checkbox>
+                  </Col>
+                  <Col span={8}>
+                    <Checkbox value="Cổng 2" disabled={disabled}>Cổng 2</Checkbox>
+                  </Col>
+                  <Col span={8}>
+                    <Checkbox value="Cổng 3" disabled={disabled}>Cổng 3</Checkbox>
+                  </Col>
+                  <Col span={8}>
+                    <Checkbox value="Cổng 4" disabled={disabled}>Cổng 4</Checkbox>
+                  </Col>
+                  <Col span={8}>
+                    <Checkbox value="Cổng 5" disabled={disabled}>Cổng 5</Checkbox>
+                  </Col>
+                </Row>
+              </Checkbox.Group>
+            </Form.Item>
             <Row justify={'center'}>
-              <Button htmlType='submit' onClick={() => handleConfirm()}>Lọc</Button>
+              <Button htmlType='submit'>Lọc</Button>
             </Row>
-          </Space>
+            {/* </Space> */}
+          </Form>
         </Modal>
       </Layout>
     </ConfigProvider>

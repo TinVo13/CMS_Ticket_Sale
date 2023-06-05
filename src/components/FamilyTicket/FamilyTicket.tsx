@@ -1,14 +1,15 @@
 import React from 'react'
-import { Badge, Button, Checkbox, Col, ConfigProvider, DatePicker, Input, Layout, Modal, Popover, Radio, RadioChangeEvent, Row, Space, Table, Tag, Typography } from 'antd';
-import { MoreOutlined } from '@ant-design/icons';
-import { SearchOutlined } from '@ant-design/icons';
+import { Badge, Button, Checkbox, Col, ConfigProvider, DatePicker, Form, Input, Layout, Modal, Popover, Radio, Row, Space, Table, Tag, Typography } from 'antd';
+import { SearchOutlined, MoreOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/es/table';
 import { DocumentData, QuerySnapshot, onSnapshot } from 'firebase/firestore';
-import { ticketFamilyPackageCollection } from '../../firebase/controller';
+import { ticketFamilyPackageCollection, updateDateTicket, updateStatusTicket } from '../../firebase/controller';
 import { TicketFamilyPackage } from '../../types/type';
 import { CheckboxValueType } from 'antd/es/checkbox/Group';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import * as XLSX from 'xlsx';
+import dayjs from 'dayjs';
+import ChangeDateModal from '../Model/ChangeDateModal';
 
 interface Filter {
     tuNgay: string,
@@ -17,42 +18,34 @@ interface Filter {
     congCheckIn: CheckboxValueType[]
 }
 const { Text } = Typography;
+const dateFormat = 'YYYY/MM/DD';
+
 const FamilyTicket: React.FC = () => {
-    const listCongCheckIn = new Set<String>();
     const [searchValue, setSearchValue] = React.useState<string>("");
     const [modalOpen, setModalOpen] = React.useState<boolean>(false);
+    const [changeDateModalOpen, setChangeDateModalOpen] = React.useState<boolean>(false);
     const [disabled, setDisabled] = React.useState<boolean>(true);
-    const [selectedCheckboxes, setSelectedCheckboxes] = React.useState<string[]>([]);
     const [ticketFamilyPackage, setTicketFamilyPackage] = React.useState<TicketFamilyPackage[]>();
 
     const [filter, setFilter] = React.useState<Filter>({
         tuNgay: '01/01/2001',
-        denNgay: '01/01/2001',
+        denNgay: dayjs().format('YYYY/MM/DD').toString(),
         tinhTrangSuDung: 'Tất cả',
         congCheckIn: ['Tất cả']
     });
 
-    const handleConfirm = () => {
-        setModalOpen(false);
-        listCongCheckIn.forEach((value) => {
-            console.log(value);
-        })
-    }
-    const handleOnchange = (item: CheckboxChangeEvent) => {
-        // if (listCongCheckIn.has(item.target.value) || !item.target.checked) {
-        //     listCongCheckIn.delete(item.target.value);
-        //     return;
-        // }
-        // listCongCheckIn.add(item.target.value);
-        // console.log(listCongCheckIn);
-        //
-        const { value, checked } = item.target;
-        if (checked) {
-            setSelectedCheckboxes([...selectedCheckboxes, value]);
-        } else {
-            setSelectedCheckboxes(selectedCheckboxes.filter((option) => option !== value));
+    const handleFinish = (fieldValues: any) => {
+        const values = {
+            ...fieldValues,
+            'tuNgay': fieldValues['tuNgay'].format('YYYY/MM/DD'),
+            'denNgay': fieldValues['denNgay'].format('YYYY/MM/DD'),
+            'tinhTrangSuDung': fieldValues['tinhTrangSuDung'],
+            'congCheckIn': fieldValues['congCheckIn']
         }
+        setFilter(values);
+        setModalOpen(false);
     }
+
     const handleDownloadCSV = () => {
         const downloadExcel = () => {
             const workSheet = XLSX.utils.json_to_sheet(ticketFamilyPackage!);
@@ -70,10 +63,13 @@ const FamilyTicket: React.FC = () => {
         };
         downloadExcel();
     }
-    // const filterData = () => {
-    //     const filteredData = ticketFamilyPackage?.filter((row) => selectedCheckboxes.includes(row.congCheckIn!));
-    //     return filteredData;
-    // };
+    const handleChangeDate = (key: string, hanSuDung: string) => {
+        updateDateTicket(key, hanSuDung);
+        setChangeDateModalOpen(false);
+    }
+    const handleUpdateStatus = (key: string) => {
+        updateStatusTicket(key);
+    }
     React.useEffect(() => {
         onSnapshot(ticketFamilyPackageCollection, (snapshot: QuerySnapshot<DocumentData>) => {
             setTicketFamilyPackage(
@@ -135,10 +131,10 @@ const FamilyTicket: React.FC = () => {
             key: 'ngaySuDung',
             filteredValue: [filter.tuNgay],
             onFilter: (value: any, record) => {
-                var ngaySuDung = String(record.ngaySuDung);
-                var convertDate = new Date(ngaySuDung);
-                var valueDate = new Date(value);
-                return convertDate.valueOf() > valueDate.valueOf();
+                var ngaySuDung = new Date(record.ngaySuDung?.toString()!);
+                var tuNgay = new Date(value.toString());
+                var denNgay = new Date(filter.denNgay.toString());
+                return tuNgay.valueOf() <= ngaySuDung.valueOf() && ngaySuDung.valueOf() <= denNgay.valueOf();
             }
         },
         {
@@ -150,14 +146,13 @@ const FamilyTicket: React.FC = () => {
             title: 'Cổng check - in',
             dataIndex: 'congCheckIn',
             key: 'congCheckIn',
-            // filteredValue: [],
-            // onFilter: (value: any, record) => {
-            //     selectedCheckboxes.map(value => {
-            //         if (value === 'Tất cả') {
-            //             return record.congCheckIn === 'Tất cả';
-            //         }
-            //     })
-            // }
+            filteredValue: ['Tất cả'],
+            onFilter: (value: string | number | boolean, record) => {
+                if (filter.congCheckIn.find((values) => values.valueOf() === value)) {
+                    return record.congCheckIn;
+                }
+                return record.congCheckIn.includes(filter.congCheckIn.map((values) => values.toString()));
+            }
         },
         {
             dataIndex: 'options',
@@ -166,16 +161,32 @@ const FamilyTicket: React.FC = () => {
                 <Space>
                     <Popover content={(
                         <Space direction='vertical'>
-                            <Button type='ghost'>Sử dụng vé</Button>
-                            <Button type='ghost'>Đổi ngày sử dụng</Button>
+                            <Button type='ghost' onClick={() => handleUpdateStatus(record.key!)}>
+                                <Text strong>
+                                    Sử dụng vé
+                                </Text>
+                            </Button>
+                            <Button type='ghost' onClick={() => setChangeDateModalOpen(true)}>
+                                <Text strong>
+                                    Đổi ngày sử dụng
+                                </Text>
+                            </Button>
+                            <ChangeDateModal
+                                visible={changeDateModalOpen}
+                                type='Family'
+                                onCancel={() => setChangeDateModalOpen(false)}
+                                onClose={() => setChangeDateModalOpen(false)}
+                                data={record}
+                                handleChangeDate={(key, hanSuDung) => handleChangeDate(key, hanSuDung)} />
                         </Space>
-                    )} trigger={'click'} color='#FFD2A8'>
+                    )} trigger={'hover'} color='#FFD2A8' placement='topRight'>
                         <MoreOutlined />
                     </Popover>
                 </Space>
             )
         }
     ]
+
     return (
         <ConfigProvider
             theme={{
@@ -185,32 +196,29 @@ const FamilyTicket: React.FC = () => {
                 components: {
                     Button: {
                         colorBorder: '#FF993C',
+                        colorText: '#FF993C'
                     },
                     Input: {
                         colorBgContainer: '#F7F7F8'
-                    },
-                    Typography: {
-                        colorText: '#FF993C'
                     },
                 }
             }}>
             <Layout style={{ minHeight: '100%' }}>
                 <Space direction='vertical'>
                     <Row justify={'space-between'}>
-                        <Col>
+                        <Col span={9}>
                             <Input
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchValue(e.target.value)}
                                 placeholder='Tìm bằng số vé'
-                                suffix={<SearchOutlined />}
-                                style={{ width: 446 }} />
+                                suffix={<SearchOutlined />} />
                         </Col>
                         <Col>
                             <Space>
-                                <Button onClick={() => setModalOpen(true)}>
-                                    <Text strong>Lọc vé</Text>
+                                <Button style={{ fontWeight: 'bold' }} onClick={() => setModalOpen(true)}>
+                                    Lọc vé
                                 </Button>
-                                <Button onClick={()=>handleDownloadCSV()}>
-                                    <Text strong>Xuất file (.CSV)</Text>
+                                <Button style={{ fontWeight: 'bold' }} onClick={() => handleDownloadCSV()}>
+                                    Xuất file (.CSV)
                                 </Button>
                             </Space>
                         </Col>
@@ -235,52 +243,83 @@ const FamilyTicket: React.FC = () => {
                     onOk={() => setModalOpen(false)}
                     onCancel={() => setModalOpen(false)}
                 >
-                    <Space style={{ width: '100%' }} direction='vertical'>
+                    <Form
+                        initialValues={{
+                            tuNgay: dayjs('2020/01/01', dateFormat),
+                            denNgay: dayjs(),
+                            tinhTrangSuDung: 'Tất cả',
+                            congCheckIn: ['Tất cả']
+                        }}
+                        onFinish={handleFinish}>
                         <Row>
                             <Col md={12}>
-                                <Space direction='vertical'>
+                                <div>
                                     <Text>Từ ngày</Text>
-                                    <DatePicker format={'YYYY/MM/DD'} onChange={(date, dateString) => { setFilter({ ...filter, tuNgay: dateString }) }} />
-                                </Space>
+                                    <Form.Item
+                                        name={'tuNgay'}>
+                                        <DatePicker
+                                            format={'YYYY/MM/DD'}
+                                        // onChange={(date, dateString) => { setFilter({ ...filter, tuNgay: dateString }) }} 
+                                        />
+                                    </Form.Item>
+                                </div>
                             </Col>
                             <Col span={12}>
-                                <Space direction='vertical'>
+                                <div>
                                     <Text>Đến ngày</Text>
-                                    <DatePicker format={"YYYY/MM/DD"} onChange={(date, dateString) => setFilter({ ...filter, denNgay: dateString })} />
-                                </Space>
+                                    <Form.Item
+                                        name={'denNgay'}>
+                                        <DatePicker
+                                            format={"YYYY/MM/DD"}
+                                        // onChange={(date, dateString) => setFilter({ ...filter, denNgay: dateString })} 
+                                        />
+                                    </Form.Item>
+                                </div>
                             </Col>
                         </Row>
                         <Text>Tình trạng sử dụng</Text>
-                        <Radio.Group onChange={(e: RadioChangeEvent) => setFilter({ ...filter, tinhTrangSuDung: e.target.value })}
-                            defaultValue={'Tất cả'}>
-                            <Radio value={'Tất cả'}>Tất cả</Radio>
-                            <Radio value={'Đã sử dụng'}>Đã sử dụng</Radio>
-                            <Radio value={'Chưa sử dụng'}>Chưa sử dụng</Radio>
-                            <Radio value={'Hết hạn'}>Hết hạn</Radio>
-                        </Radio.Group>
+                        <Form.Item
+                            name={'tinhTrangSuDung'}>
+                            <Radio.Group>
+                                <Radio value={'Tất cả'}>Tất cả</Radio>
+                                <Radio value={'Đã sử dụng'}>Đã sử dụng</Radio>
+                                <Radio value={'Chưa sử dụng'}>Chưa sử dụng</Radio>
+                                <Radio value={'Hết hạn'}>Hết hạn</Radio>
+                            </Radio.Group>
+                        </Form.Item>
                         <Text>Cổng Check - in</Text>
-                        <Row justify={'space-between'}>
-                            <Checkbox defaultChecked onChange={(e: CheckboxChangeEvent) => {
-                                e.target.checked ? setDisabled(true) : setDisabled(false);
-                                listCongCheckIn.clear();
-                            }}>Tất cả</Checkbox>
-                            <Checkbox value={'Cổng 1'} disabled={disabled}
-                                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 1</Checkbox>
-                            <Checkbox value={'Cổng 2'} disabled={disabled}
-                                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 2</Checkbox>
-                        </Row>
-                        <Row justify={'space-between'}>
-                            <Checkbox value={'Cổng 3'} disabled={disabled}
-                                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 3</Checkbox>
-                            <Checkbox value={'Cổng 4'} disabled={disabled}
-                                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 4</Checkbox>
-                            <Checkbox value={'Cổng 5'} disabled={disabled}
-                                onChange={(e: CheckboxChangeEvent) => handleOnchange(e)}>Cổng 5</Checkbox>
-                        </Row>
+                        <Form.Item
+                            name={'congCheckIn'}>
+                            <Checkbox.Group>
+                                <Row justify={'space-between'}>
+                                    <Col span={8}>
+                                        <Checkbox value="Tất cả" onChange={(e: CheckboxChangeEvent) => {
+                                            e.target.checked ? setDisabled(true) : setDisabled(false)
+                                        }}>Tất cả</Checkbox>
+                                    </Col>
+                                    <Col span={8}>
+                                        <Checkbox value="Cổng 1" disabled={disabled}>Cổng 1</Checkbox>
+                                    </Col>
+                                    <Col span={8}>
+                                        <Checkbox value="Cổng 2" disabled={disabled}>Cổng 2</Checkbox>
+                                    </Col>
+                                    <Col span={8}>
+                                        <Checkbox value="Cổng 3" disabled={disabled}>Cổng 3</Checkbox>
+                                    </Col>
+                                    <Col span={8}>
+                                        <Checkbox value="Cổng 4" disabled={disabled}>Cổng 4</Checkbox>
+                                    </Col>
+                                    <Col span={8}>
+                                        <Checkbox value="Cổng 5" disabled={disabled}>Cổng 5</Checkbox>
+                                    </Col>
+                                </Row>
+                            </Checkbox.Group>
+                        </Form.Item>
                         <Row justify={'center'}>
-                            <Button htmlType='submit' onClick={() => handleConfirm()}>Lọc</Button>
+                            <Button htmlType='submit'>Lọc</Button>
                         </Row>
-                    </Space>
+                        {/* </Space> */}
+                    </Form>
                 </Modal>
             </Layout>
         </ConfigProvider>

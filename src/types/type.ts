@@ -6,7 +6,7 @@ export interface TicketEventPackage {
     tinhTrangSuDung?: any,
     ngaySuDung?: string,
     ngayXuatVe?: string,
-    congCheckIn?: string
+    congCheckIn?: any
 }
 export interface TicketEventPackageType {
     key: string,
@@ -34,15 +34,23 @@ export interface TicketFamilyPackage {
     tinhTrangSuDung?: any,
     ngaySuDung?: string,
     ngayXuatVe?: string,
-    congCheckIn?: string
+    congCheckIn?: any
 }
-export interface TicketCheckType {
+export interface TicketChecks {
     key?: string,
     soVe?: string,
     ngaySuDung?: string,
     tenLoaiVe?: string,
     congCheckIn?: string,
-    doiSoat?: string
+    doiSoat?: any
+}
+export interface TicketCheckType {
+    key: string,
+    soVe: string,
+    ngaySuDung: string,
+    tenLoaiVe: string,
+    congCheckIn: string,
+    doiSoat: any
 }
 
 export interface TicketPackageType {

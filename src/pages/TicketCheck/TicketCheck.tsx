@@ -1,31 +1,57 @@
 import React from 'react'
-import { Button, Col, ConfigProvider, DatePicker, Input, Layout, Radio, RadioChangeEvent, Row, Space, Table, Typography, theme } from 'antd'
+import { Button, Col, ConfigProvider, DatePicker, Form, Input, Layout, Radio, Row, Space, Table, Typography, theme } from 'antd'
 import { SearchOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/es/table';
-import { TicketCheckType } from '../../types/type';
+import { TicketChecks } from '../../types/type';
 import { DocumentData, QuerySnapshot, onSnapshot } from 'firebase/firestore';
 import { ticketCheckPackageCollection } from '../../firebase/controller';
+import dayjs from 'dayjs';
+import { useAppDispatch, useAppSelector } from '../../redux/store';
+import { getTicketCheck } from '../../redux/features/ticketCheck.slice';
 
+interface Filter {
+  doiSoat: string,
+  tuNgay: string,
+  denNgay: string
+}
 const { Text } = Typography;
+const dateFormat = 'YYYY/MM/DD';
 const TicketCheck: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const data = useAppSelector((state)=>state.ticketCheckSlice);
   const [searchValue, setSearchValue] = React.useState<string>('');
-  const [value,setValue] = React.useState<string>('');
-  const [ticketCheck,setTicketCheck] = React.useState<TicketCheckType[]>();
+  const [ticketCheck, setTicketCheck] = React.useState<TicketChecks[]>();
+  const [filter, setFilter] = React.useState<Filter>({
+    tuNgay: dayjs('2020/01/01').format(dateFormat),
+    denNgay: dayjs().format(dateFormat),
+    doiSoat: 'Tất cả'
+  });
 
-
+  const handleClick = (fieldsValue: any) => {
+    const value = {
+      ...fieldsValue,
+      'doiSoat': fieldsValue['doiSoat'],
+      'tuNgay': fieldsValue['tuNgay'].format(dateFormat),
+      'denNgay': fieldsValue['denNgay'].format(dateFormat)
+    }
+    setFilter(value);
+  }
   React.useEffect(() => {
     onSnapshot(ticketCheckPackageCollection, (snapshot: QuerySnapshot<DocumentData>) => {
-        setTicketCheck(
-            snapshot.docs.map((doc) => {
-                return {
-                    key: doc.id,
-                    ...doc.data()
-                }
-            })
-        )
+      setTicketCheck(
+        snapshot.docs.map((doc) => {
+          return {
+            key: doc.id,
+            ...doc.data()
+          }
+        })
+      )
     })
-}, [])
-  const columns: ColumnsType<TicketCheckType> = [
+  }, [])
+  React.useEffect(()=>{
+    dispatch(getTicketCheck({list:ticketCheck!}));
+  });
+  const columns: ColumnsType<TicketChecks> = [
     {
       title: 'STT',
       render: (text, record, index) => (
@@ -45,6 +71,13 @@ const TicketCheck: React.FC = () => {
       title: 'Ngày sử dụng',
       dataIndex: 'ngaySuDung',
       key: 'ngaySuDung',
+      filteredValue: [filter.tuNgay],
+      onFilter: (value: number | string | boolean, record) => {
+        var ngaySuDung = new Date(record.ngaySuDung?.toString()!);
+        var tuNgay = new Date(filter.tuNgay.toString());
+        var denNgay = new Date(filter.denNgay.toString());
+        return tuNgay <= ngaySuDung && ngaySuDung <= denNgay;
+      }
     },
     {
       title: 'Tên loại vé',
@@ -57,14 +90,21 @@ const TicketCheck: React.FC = () => {
       key: 'congCheckIn',
     },
     {
-      dataIndex:'doiSoat',
-      key:'doiSoat',
-      render:(_,record)=>(
+      dataIndex: 'doiSoat',
+      key: 'doiSoat',
+      render: (_, record) => (
         <Space>
-          {record.doiSoat?.includes('Đã đối soát')&&<Text type='danger' italic>{record.doiSoat}</Text>}
-          {record.doiSoat?.includes('Chưa đối soát')&&<Text type='secondary' italic>{record.doiSoat}</Text>}
+          {record.doiSoat?.includes('Đã đối soát') && <Text type='danger' italic>{record.doiSoat}</Text>}
+          {record.doiSoat?.includes('Chưa đối soát') && <Text type='secondary' italic>{record.doiSoat}</Text>}
         </Space>
-      )
+      ),
+      filteredValue: [filter.doiSoat],
+      onFilter: (value: string | boolean | number, record) => {
+        if (value === 'Tất cả') {
+          return record.doiSoat!;
+        }
+        return record.doiSoat === value;
+      }
     }
   ]
   const {
@@ -86,11 +126,11 @@ const TicketCheck: React.FC = () => {
       }}>
       <Row gutter={24}>
         <Col span={17}>
-          <Layout style={{borderRadius:24,padding:16,height:'75ch'}}>
+          <Layout style={{ borderRadius: 24, padding: 16, height: '75ch' }}>
             <Space direction='vertical' style={{ width: '100%' }}>
               <Text className='page-title'>Đối soát vé</Text>
               <Row justify={'space-between'}>
-                <Col>
+                <Col span={13}>
                   <Input
                     prefix={<SearchOutlined />}
                     placeholder='Tìm bằng số vé'
@@ -101,56 +141,75 @@ const TicketCheck: React.FC = () => {
                 </Col>
               </Row>
               <Table
-                dataSource={ticketCheck}
+                dataSource={data.ticketCheckList}
                 columns={columns}
-                pagination={{pageSize:6}}/>
+                pagination={{ pageSize: 6 }} />
             </Space>
           </Layout>
         </Col>
         <Col span={7}>
-          <Layout style={{borderRadius:24,padding:16,height:'75ch'}}>
-            <Space direction='vertical' size={'middle'}>
-              <Text strong style={{fontSize:24}}>Lọc vé</Text>
-              <Row>
-                <Col span={12}>
-                  <Text>Tình trạng đối soát</Text>
-                </Col>
-                <Col span={12}>
-                  <Radio.Group onChange={(e:RadioChangeEvent)=>setValue(e.target.value)} value={value}>
-                    <Radio value={''}>Tất cả</Radio>
-                    <Radio value={'Đã đối soát'}>Đã đối soát</Radio>
-                    <Radio value={'Chưa đối soát'}>Chưa đối soát</Radio>
-                  </Radio.Group>
-                </Col>
-              </Row>
-              <Row>
-                <Col span={12}>
-                  <Text>Loại vé</Text>
-                </Col>
-                <Col span={12}>
-                  Vé cổng
-                </Col>
-              </Row>
-              <Row>
-                <Col span={12}>
-                  <Text>Từ ngày</Text>
-                </Col>
-                <Col span={12}>
-                  <DatePicker format={'DD/MM/YYYY'} disabled/>
-                </Col>
-              </Row>
-              <Row>
-                <Col span={12}>
-                  <Text>Đến ngày</Text>
-                </Col>
-                <Col span={12}>
-                  <DatePicker format={'DD/MM/YYYY'}/>
-                </Col>
-              </Row>
-              <Row justify={'center'}>
-                <Button style={{background:'white',borderColor:'#FFB800',color:'#FFB800',fontWeight:'bold'}}>Lọc</Button>
-              </Row>
-            </Space>
+          <Layout style={{ borderRadius: 24, padding: 16, height: '75ch' }}>
+            <Form
+              initialValues={{
+                doiSoat: 'Tất cả',
+                tuNgay: dayjs('2020/01/01'),
+                denNgay: dayjs()
+              }}
+              onFinish={(fieldsValue) => handleClick(fieldsValue)}>
+              <Space direction='vertical'>
+                <Text strong style={{ fontSize: 24 }}>Lọc vé</Text>
+                <Row>
+                  <Col span={12}>
+                    <Text>Tình trạng đối soát</Text>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      name={'doiSoat'}>
+                      <Radio.Group>
+                        <Radio value={'Tất cả'}>Tất cả</Radio>
+                        <Radio value={'Đã đối soát'}>Đã đối soát</Radio>
+                        <Radio value={'Chưa đối soát'}>Chưa đối soát</Radio>
+                      </Radio.Group>
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col span={12}>
+                    <Text>Loại vé</Text>
+                  </Col>
+                  <Col span={12}>
+                    Vé cổng
+                  </Col>
+                </Row>
+                <Row>
+                  <Col span={12}>
+                    <Text>Từ ngày</Text>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      name={'tuNgay'}>
+                      <DatePicker format={dateFormat} disabled />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col span={12}>
+                    <Text>Đến ngày</Text>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      name={'denNgay'}>
+                      <DatePicker format={dateFormat} placement='bottomRight' showToday={false}/>
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Row justify={'center'}>
+                  <Button
+                    style={{ background: 'white', borderColor: '#FFB800', color: '#FFB800', fontWeight: 'bold', width: 100 }}
+                    htmlType='submit'>Lọc</Button>
+                </Row>
+              </Space>
+            </Form>
           </Layout>
         </Col>
       </Row>

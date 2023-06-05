@@ -64,9 +64,9 @@ const AddTicket: React.FC<ModelProps> = ({ isOpen, isClose, handleAddTicket }) =
                                                 message: 'Vui lòng điền vào!'
                                             }
                                         ]}>
-                                        <DatePicker format={'DD/MM/YY'}
+                                        <DatePicker format={'DD/MM/YYYY'}
                                             onChange={(date: any, dateString) =>
-                                                setTicketPackage({ ...ticketPackage, ngayApDung: `${dateString} 00:00:00` })} />
+                                                setTicketPackage({ ...ticketPackage, ngayApDung: `${dateString}` })} />
                                     </Form.Item>
                                     <Form.Item
                                         name={'gioApDung'}
@@ -76,7 +76,9 @@ const AddTicket: React.FC<ModelProps> = ({ isOpen, isClose, handleAddTicket }) =
                                                 message: 'Vui lòng điền vào!'
                                             }
                                         ]}>
-                                        <TimePicker />
+                                        <TimePicker onChange={(value,dateString)=>{
+                                            setTicketPackage({...ticketPackage,ngayApDung: ticketPackage.ngayApDung + ` ${dateString}`})
+                                        }}/>
                                     </Form.Item>
                                 </Space>
                             </div>
@@ -95,9 +97,9 @@ const AddTicket: React.FC<ModelProps> = ({ isOpen, isClose, handleAddTicket }) =
                                                 message: 'Vui lòng điền vào!'
                                             }
                                         ]}>
-                                        <DatePicker format={'DD/MM/YY'}
+                                        <DatePicker format={'DD/MM/YYYY'}
                                             onChange={(date: any, dateString) =>
-                                                setTicketPackage({ ...ticketPackage, ngayHetHan: `${dateString} 00:00:00` })} />
+                                                setTicketPackage({ ...ticketPackage, ngayHetHan: `${dateString}` })} />
                                     </Form.Item>
                                     <Form.Item
                                         name={'gioHetHan'}
@@ -107,7 +109,9 @@ const AddTicket: React.FC<ModelProps> = ({ isOpen, isClose, handleAddTicket }) =
                                                 message: 'Vui lòng điền vào!'
                                             }
                                         ]}>
-                                        <TimePicker />
+                                        <TimePicker onChange={(value,dateString)=>{
+                                            setTicketPackage({...ticketPackage,ngayHetHan: ticketPackage.ngayHetHan + ` ${dateString}`})
+                                        }}/>
                                     </Form.Item>
                                 </Space>
                             </div>
