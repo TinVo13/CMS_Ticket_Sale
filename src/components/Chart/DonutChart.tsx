@@ -1,11 +1,13 @@
-import React from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
+import { Data } from '../../types/type';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
+
 interface DonutProps {
     title: string,
+    data:Data
 }
 const DonutChart = (props: DonutProps) => {
     const options = {
@@ -21,12 +23,12 @@ const DonutChart = (props: DonutProps) => {
             },
         },
     };
-    const data = {
+    const datas = {
         labels: ['Vé chưa sử dụng', 'Vé đã sử dụng'],
         datasets: [
             {
                 label: 'Gói gia đình',
-                data: [13568, 56024],
+                data: [props.data.unused, props.data.used],
                 backgroundColor: [
                     '#FF8A48',
                     '#4F75FF'
@@ -40,7 +42,7 @@ const DonutChart = (props: DonutProps) => {
         ],
     };
     return (
-        <Doughnut data={data} options={options} height={"200px"} />
+        <Doughnut data={datas} options={options} height={"200px"} />
     )
 }
 

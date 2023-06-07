@@ -3,13 +3,15 @@ import { Badge, Button, Checkbox, Col, ConfigProvider, DatePicker, Form, Input, 
 import { SearchOutlined, MoreOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/es/table';
 import { DocumentData, QuerySnapshot, onSnapshot } from 'firebase/firestore';
-import { ticketFamilyPackageCollection, updateDateTicket, updateStatusTicket } from '../../firebase/controller';
+import { ticketFamilyPackageCollection } from '../../firebase/controller';
 import { TicketFamilyPackage } from '../../types/type';
 import { CheckboxValueType } from 'antd/es/checkbox/Group';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
-import * as XLSX from 'xlsx';
-import dayjs from 'dayjs';
 import ChangeDateModal from '../Model/ChangeDateModal';
+import { useAppDispatch, useAppSelector } from '../../redux/store';
+import { getTicketFamilyPackage, updateStatusFamilyPackage, updateTicketFamilyPackage } from '../../redux/features/ticketFamilyPackage.slice';
+import dayjs from 'dayjs';
+import * as XLSX from 'xlsx';
 
 interface Filter {
     tuNgay: string,
@@ -21,6 +23,8 @@ const { Text } = Typography;
 const dateFormat = 'YYYY/MM/DD';
 
 const FamilyTicket: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const data = useAppSelector((state)=>state.ticketFamilyPackageSlice);
     const [searchValue, setSearchValue] = React.useState<string>("");
     const [modalOpen, setModalOpen] = React.useState<boolean>(false);
     const [changeDateModalOpen, setChangeDateModalOpen] = React.useState<boolean>(false);
@@ -52,7 +56,7 @@ const FamilyTicket: React.FC = () => {
             const workBook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workBook, workSheet, "Báo Cáo");
             //Buffer
-            let buf = XLSX.write(workBook, {
+            XLSX.write(workBook, {
                 bookType: "xlsx",
                 type: "buffer",
             });
@@ -63,12 +67,14 @@ const FamilyTicket: React.FC = () => {
         };
         downloadExcel();
     }
+    //update ngaySuDung
     const handleChangeDate = (key: string, hanSuDung: string) => {
-        updateDateTicket(key, hanSuDung);
+        dispatch(updateTicketFamilyPackage({key:key,hanSuDung:hanSuDung}));
         setChangeDateModalOpen(false);
     }
+    //update status
     const handleUpdateStatus = (key: string) => {
-        updateStatusTicket(key);
+        dispatch(updateStatusFamilyPackage({key:key}));
     }
     React.useEffect(() => {
         onSnapshot(ticketFamilyPackageCollection, (snapshot: QuerySnapshot<DocumentData>) => {
@@ -82,6 +88,9 @@ const FamilyTicket: React.FC = () => {
             )
         })
     }, [])
+    React.useEffect(()=>{
+        dispatch(getTicketFamilyPackage({list:ticketFamilyPackage!}));
+    })
     const columns: ColumnsType<TicketFamilyPackage> = [
         {
             title: 'STT',
@@ -227,7 +236,7 @@ const FamilyTicket: React.FC = () => {
                         pagination={{ pageSize: 7, position: ['bottomCenter'] }}
                         size='middle'
                         columns={columns}
-                        dataSource={ticketFamilyPackage}
+                        dataSource={data.ticketEventList}
                         rowClassName={(record, index) => index % 2 === 0 ? 'table-row-light' : 'table-row-dark'} />
                 </Space>
                 <Modal

@@ -5,9 +5,10 @@ import { ColumnsType } from 'antd/es/table';
 import { TicketChecks } from '../../types/type';
 import { DocumentData, QuerySnapshot, onSnapshot } from 'firebase/firestore';
 import { ticketCheckPackageCollection } from '../../firebase/controller';
-import dayjs from 'dayjs';
 import { useAppDispatch, useAppSelector } from '../../redux/store';
 import { getTicketCheck } from '../../redux/features/ticketCheck.slice';
+import dayjs from 'dayjs';
+import * as XLSX from 'xlsx';
 
 interface Filter {
   doiSoat: string,
@@ -18,7 +19,7 @@ const { Text } = Typography;
 const dateFormat = 'YYYY/MM/DD';
 const TicketCheck: React.FC = () => {
   const dispatch = useAppDispatch();
-  const data = useAppSelector((state)=>state.ticketCheckSlice);
+  const data = useAppSelector((state) => state.ticketCheckSlice);
   const [searchValue, setSearchValue] = React.useState<string>('');
   const [ticketCheck, setTicketCheck] = React.useState<TicketChecks[]>();
   const [filter, setFilter] = React.useState<Filter>({
@@ -27,7 +28,7 @@ const TicketCheck: React.FC = () => {
     doiSoat: 'Tất cả'
   });
 
-  const handleClick = (fieldsValue: any) => {
+  const handleFilter = (fieldsValue: any) => {
     const value = {
       ...fieldsValue,
       'doiSoat': fieldsValue['doiSoat'],
@@ -35,6 +36,27 @@ const TicketCheck: React.FC = () => {
       'denNgay': fieldsValue['denNgay'].format(dateFormat)
     }
     setFilter(value);
+  }
+  const handleClick = () => {
+    if (filter.doiSoat.includes('Chưa đối soát')) {
+
+    } else {
+      const downloadExcel = () => {
+        const workSheet = XLSX.utils.json_to_sheet(data.ticketCheckList);
+        const workBook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workBook, workSheet, "Báo Cáo");
+        //Buffer
+        XLSX.write(workBook, {
+          bookType: "xlsx",
+          type: "buffer",
+        });
+        //Binary string
+        XLSX.write(workBook, { bookType: "xlsx", type: "binary" });
+        //Download
+        XLSX.writeFile(workBook, "DanhSachDoiSoat.xlsx");
+      };
+      downloadExcel();
+    }
   }
   React.useEffect(() => {
     onSnapshot(ticketCheckPackageCollection, (snapshot: QuerySnapshot<DocumentData>) => {
@@ -48,8 +70,8 @@ const TicketCheck: React.FC = () => {
       )
     })
   }, [])
-  React.useEffect(()=>{
-    dispatch(getTicketCheck({list:ticketCheck!}));
+  React.useEffect(() => {
+    dispatch(getTicketCheck({ list: ticketCheck! }));
   });
   const columns: ColumnsType<TicketChecks> = [
     {
@@ -118,6 +140,9 @@ const TicketCheck: React.FC = () => {
           colorBgLayout: colorBgContainer
         },
         components: {
+          Input: {
+            colorBgContainer: '#EDEDED'
+          },
           Button: {
             colorBgContainer: '#FFB800',
             colorText: 'white',
@@ -137,7 +162,11 @@ const TicketCheck: React.FC = () => {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchValue(e.target.value)} />
                 </Col>
                 <Col>
-                  <Button>Chốt đối soát</Button>
+                  {filter.doiSoat === 'Chưa đối soát' ?
+                    <Button style={{ fontWeight: 'bold' }} onClick={handleClick}>Chốt đối soát</Button>
+                    :
+                    <Button style={{ background: 'white', borderColor: '#FF993C', color: '#FF993C', fontWeight: 'bold' }} onClick={handleClick}>Xuất file (.csv)</Button>
+                  }
                 </Col>
               </Row>
               <Table
@@ -155,7 +184,7 @@ const TicketCheck: React.FC = () => {
                 tuNgay: dayjs('2020/01/01'),
                 denNgay: dayjs()
               }}
-              onFinish={(fieldsValue) => handleClick(fieldsValue)}>
+              onFinish={(fieldsValue) => handleFilter(fieldsValue)}>
               <Space direction='vertical'>
                 <Text strong style={{ fontSize: 24 }}>Lọc vé</Text>
                 <Row>
@@ -199,7 +228,7 @@ const TicketCheck: React.FC = () => {
                   <Col span={12}>
                     <Form.Item
                       name={'denNgay'}>
-                      <DatePicker format={dateFormat} placement='bottomRight' showToday={false}/>
+                      <DatePicker format={dateFormat} placement='bottomRight' showToday={false} />
                     </Form.Item>
                   </Col>
                 </Row>

@@ -3,7 +3,7 @@ import { Button, Col, ConfigProvider, Input, Layout, Row, Space, Table, Typograp
 import { ColumnsType } from 'antd/es/table';
 import { TicketPackage, TicketPackageType } from '../../types/type';
 import { SearchOutlined } from '@ant-design/icons';
-import AddTicket from '../../components/AddTicket/AddTicket';
+import AddTicket from '../../components/Model/AddTicket';
 import { ticketPackageCollection } from '../../firebase/controller';
 import { DocumentData, QuerySnapshot, onSnapshot } from 'firebase/firestore';
 import { useAppDispatch, useAppSelector } from '../../redux/store';
@@ -119,7 +119,7 @@ const Setting: React.FC = () => {
         <Space direction='vertical'>
           <Text className='page-title'>Danh sách gói vé</Text>
           <Row justify={'space-between'}>
-            <Col>
+            <Col span={9}>
               <Input
                 placeholder='Tìm bằng tên gói vé'
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchValue(e.target.value)}
@@ -127,7 +127,7 @@ const Setting: React.FC = () => {
             </Col>
             <Col>
               <Space>
-                <Button style={{ color: '#FFB800', fontWeight: 'bold' }} >Xuất file (.csp)</Button>
+                <Button style={{ color: '#FFB800', fontWeight: 'bold' }} >Xuất file (.csv)</Button>
                 <Button style={{ background: '#FFB800', color: 'white', fontWeight: 'bold' }} onClick={() => setOpenModel(true)}>Thêm gói vé</Button>
               </Space>
             </Col>

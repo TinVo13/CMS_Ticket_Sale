@@ -73,3 +73,7 @@ export interface TicketPackage {
     giaCombo?: string,
     tinhTrang?: string
 }
+export interface Data {
+    used:number,
+    unused:number
+}

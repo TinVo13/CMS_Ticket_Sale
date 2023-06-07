@@ -1,4 +1,4 @@
-import {  addDoc, collection, doc, updateDoc, } from "firebase/firestore";
+import { addDoc, collection, doc, getCountFromServer, query, updateDoc, where, } from "firebase/firestore";
 import { TicketPackage } from "../types/type";
 import { db } from "./fbConfig";
 
@@ -9,15 +9,15 @@ export const ticketCheckPackageCollection = collection(db, "TicketCheck");
 
 export const addPackage = async (ticketpackage: TicketPackage) => {
     await addDoc(ticketPackageCollection, { ...ticketpackage })
-    .then(() => {
-        alert('Thêm gói vé thành công!');
-    }).catch((err) => {
-        alert('Thêm thất bại: ' + err);
-    })
+        .then(() => {
+            alert('Thêm gói vé thành công!');
+        }).catch((err) => {
+            alert('Thêm thất bại: ' + err);
+        })
 }
 
-export const updateDateTicket = async (key: string, hanSuDung: string) => {
-    // Update document with ID "key" in collection "TicketFamilyPackage"
+// Update document with ID "key" in collection "TicketFamilyPackage"
+export const updateDateFamilyTicket = async (key: string, hanSuDung: string) => {
     const ref = doc(ticketFamilyPackageCollection, key);
     await updateDoc(ref, {
         ngaySuDung: hanSuDung
@@ -27,8 +27,8 @@ export const updateDateTicket = async (key: string, hanSuDung: string) => {
         alert('Lỗi: ' + err);
     })
 }
-export const updateStatusTicket = async (key: string) => {
-    // Update document with ID "key" in collection "TicketFamilyPackage"
+// Update document with ID "key" in collection "TicketFamilyPackage"
+export const updateStatusFamilyTicket = async (key: string) => {
     const ref = doc(ticketFamilyPackageCollection, key);
     await updateDoc(ref, {
         tinhTrangSuDung: 'Đã sử dụng'
@@ -38,8 +38,8 @@ export const updateStatusTicket = async (key: string) => {
         alert('Lỗi: ' + err);
     })
 }
+// Update document with ID "key" in collection "TicketEventPackage"
 export const updateDateEventTicket = async (key: string, hanSuDung: string) => {
-    // Update document with ID "key" in collection "TicketFamilyPackage"
     const ref = doc(ticketEventPackageCollection, key);
     await updateDoc(ref, {
         ngaySuDung: hanSuDung
@@ -49,8 +49,8 @@ export const updateDateEventTicket = async (key: string, hanSuDung: string) => {
         alert('Lỗi: ' + err);
     })
 }
+// Update document with ID "key" in collection "TicketEventPackage"
 export const updateStatusEventTicket = async (key: string) => {
-    // Update document with ID "key" in collection "TicketFamilyPackage"
     const ref = doc(ticketEventPackageCollection, key);
     await updateDoc(ref, {
         tinhTrangSuDung: 'Đã sử dụng'
@@ -59,4 +59,17 @@ export const updateStatusEventTicket = async (key: string) => {
     }).catch((err) => {
         alert('Lỗi: ' + err);
     })
+}
+export const getUnusedTicketFamilyPackage = async () => {
+    const q = query(ticketFamilyPackageCollection, where("tinhTrangSuDung", "==", "Chưa sử dụng"));
+    const snapshot = await getCountFromServer(q);
+    let count: number = snapshot.data().count;
+    return count;
+}
+export function getUsedTicketFamilyPackage() {
+    async function callAsync() {
+        const q = query(ticketFamilyPackageCollection, where("tinhTrangSuDung", "==", "Đã sử dụng"));
+        return (await getCountFromServer(q)).data().count;
+    }
+    callAsync();
 }
