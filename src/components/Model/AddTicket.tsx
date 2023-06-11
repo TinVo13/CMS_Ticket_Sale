@@ -1,18 +1,20 @@
 import React from 'react'
-import { Button, Checkbox, Col, DatePicker, Form, Input, Modal, Row, Select, Space, TimePicker, Typography } from 'antd'
+import { Button, Checkbox, Col, DatePicker, Form, FormInstance, Input, Modal, Row, Select, Space, TimePicker, Typography } from 'antd'
 import { TicketPackageType } from '../../types/type';
 
 interface ModelProps {
+    form: FormInstance<any>,
     isOpen: boolean,
     isClose: (e: React.MouseEvent<HTMLButtonElement>) => void,
     handleAddTicket: (ticket: TicketPackageType) => void
 }
 const { Text } = Typography;
-const AddTicket: React.FC<ModelProps> = ({ isOpen, isClose, handleAddTicket }) => {
+const AddTicket: React.FC<ModelProps> = ({ form, isOpen, isClose, handleAddTicket }) => {
+    const dateFormat = 'YYYY/MM/DD';
+    const timeFormat = 'HH:mm:ss';
     const [ticketPackage, setTicketPackage] = React.useState<TicketPackageType>({
         giaCombo: "",
         giaVe: "",
-        key: "",
         maGoi: "",
         ngayApDung: "",
         ngayHetHan: "",
@@ -31,6 +33,7 @@ const AddTicket: React.FC<ModelProps> = ({ isOpen, isClose, handleAddTicket }) =
             footer={false}
         >
             <Form
+                form={form}
                 onFinish={() => handleAddTicket(ticketPackage)}>
                 <Row>
                     <Col span={12}>
@@ -54,67 +57,63 @@ const AddTicket: React.FC<ModelProps> = ({ isOpen, isClose, handleAddTicket }) =
                     <Col span={12}>
                         <Space direction='vertical'>
                             <Text>Ngày áp dụng</Text>
-                            <div>
-                                <Space>
-                                    <Form.Item
-                                        name={'ngayApDung'}
-                                        rules={[
-                                            {
-                                                required: true,
-                                                message: 'Vui lòng điền vào!'
-                                            }
-                                        ]}>
-                                        <DatePicker format={'DD/MM/YYYY'}
-                                            onChange={(date: any, dateString) =>
-                                                setTicketPackage({ ...ticketPackage, ngayApDung: `${dateString}` })} />
-                                    </Form.Item>
-                                    <Form.Item
-                                        name={'gioApDung'}
-                                        rules={[
-                                            {
-                                                required: true,
-                                                message: 'Vui lòng điền vào!'
-                                            }
-                                        ]}>
-                                        <TimePicker onChange={(value,dateString)=>{
-                                            setTicketPackage({...ticketPackage,ngayApDung: ticketPackage.ngayApDung + ` ${dateString}`})
-                                        }}/>
-                                    </Form.Item>
-                                </Space>
-                            </div>
+                            <Space>
+                                <Form.Item
+                                    name={'ngayApDung'}
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: 'Vui lòng điền vào!'
+                                        }
+                                    ]}>
+                                    <DatePicker format={dateFormat}
+                                        onChange={(date: any, dateString) =>
+                                            setTicketPackage({ ...ticketPackage, ngayApDung: `${dateString}` })} />
+                                </Form.Item>
+                                <Form.Item
+                                    name={'gioApDung'}
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: 'Vui lòng điền vào!'
+                                        }
+                                    ]}>
+                                    <TimePicker format={timeFormat} onChange={(value, dateString) => {
+                                        setTicketPackage({ ...ticketPackage, ngayApDung: ticketPackage.ngayApDung + ` ${dateString}` })
+                                    }} />
+                                </Form.Item>
+                            </Space>
                         </Space>
                     </Col>
                     <Col span={12}>
                         <Space direction='vertical'>
                             <Text>Ngày hết hạn</Text>
-                            <div>
-                                <Space>
-                                    <Form.Item
-                                        name={'ngayHetHan'}
-                                        rules={[
-                                            {
-                                                required: true,
-                                                message: 'Vui lòng điền vào!'
-                                            }
-                                        ]}>
-                                        <DatePicker format={'DD/MM/YYYY'}
-                                            onChange={(date: any, dateString) =>
-                                                setTicketPackage({ ...ticketPackage, ngayHetHan: `${dateString}` })} />
-                                    </Form.Item>
-                                    <Form.Item
-                                        name={'gioHetHan'}
-                                        rules={[
-                                            {
-                                                required: true,
-                                                message: 'Vui lòng điền vào!'
-                                            }
-                                        ]}>
-                                        <TimePicker onChange={(value,dateString)=>{
-                                            setTicketPackage({...ticketPackage,ngayHetHan: ticketPackage.ngayHetHan + ` ${dateString}`})
-                                        }}/>
-                                    </Form.Item>
-                                </Space>
-                            </div>
+                            <Space>
+                                <Form.Item
+                                    name={'ngayHetHan'}
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: 'Vui lòng điền vào!'
+                                        }
+                                    ]}>
+                                    <DatePicker format={dateFormat}
+                                        onChange={(date: any, dateString) =>
+                                            setTicketPackage({ ...ticketPackage, ngayHetHan: `${dateString}` })} />
+                                </Form.Item>
+                                <Form.Item
+                                    name={'gioHetHan'}
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: 'Vui lòng điền vào!'
+                                        }
+                                    ]}>
+                                    <TimePicker format={timeFormat} onChange={(value, dateString) => {
+                                        setTicketPackage({ ...ticketPackage, ngayHetHan: ticketPackage.ngayHetHan + ` ${dateString}` })
+                                    }} />
+                                </Form.Item>
+                            </Space>
                         </Space>
                     </Col>
                 </Row>
@@ -185,7 +184,7 @@ const AddTicket: React.FC<ModelProps> = ({ isOpen, isClose, handleAddTicket }) =
                         </Form.Item>
                     </Space>
                 </Row>
-                    <Text type='danger'>*<Text>là thông tin bắt buộc</Text></Text>
+                <Text type='danger'>*<Text>là thông tin bắt buộc</Text></Text>
                 <Row>
                 </Row>
                 <Row justify={'center'}>

@@ -24,7 +24,7 @@ const dateFormat = 'YYYY/MM/DD';
 
 const FamilyTicket: React.FC = () => {
     const dispatch = useAppDispatch();
-    const data = useAppSelector((state)=>state.ticketFamilyPackageSlice);
+    const data = useAppSelector((state) => state.ticketFamilyPackageSlice);
     const [searchValue, setSearchValue] = React.useState<string>("");
     const [modalOpen, setModalOpen] = React.useState<boolean>(false);
     const [changeDateModalOpen, setChangeDateModalOpen] = React.useState<boolean>(false);
@@ -33,7 +33,7 @@ const FamilyTicket: React.FC = () => {
 
     const [filter, setFilter] = React.useState<Filter>({
         tuNgay: '01/01/2001',
-        denNgay: dayjs().format('YYYY/MM/DD').toString(),
+        denNgay: dayjs().format(dateFormat).toString(),
         tinhTrangSuDung: 'Tất cả',
         congCheckIn: ['Tất cả']
     });
@@ -41,8 +41,8 @@ const FamilyTicket: React.FC = () => {
     const handleFinish = (fieldValues: any) => {
         const values = {
             ...fieldValues,
-            'tuNgay': fieldValues['tuNgay'].format('YYYY/MM/DD'),
-            'denNgay': fieldValues['denNgay'].format('YYYY/MM/DD'),
+            'tuNgay': fieldValues['tuNgay'].format(dateFormat),
+            'denNgay': fieldValues['denNgay'].format(dateFormat),
             'tinhTrangSuDung': fieldValues['tinhTrangSuDung'],
             'congCheckIn': fieldValues['congCheckIn']
         }
@@ -69,13 +69,14 @@ const FamilyTicket: React.FC = () => {
     }
     //update ngaySuDung
     const handleChangeDate = (key: string, hanSuDung: string) => {
-        dispatch(updateTicketFamilyPackage({key:key,hanSuDung:hanSuDung}));
+        dispatch(updateTicketFamilyPackage({ key: key, hanSuDung: hanSuDung }));
         setChangeDateModalOpen(false);
     }
     //update status
     const handleUpdateStatus = (key: string) => {
-        dispatch(updateStatusFamilyPackage({key:key}));
+        dispatch(updateStatusFamilyPackage({ key: key }));
     }
+    //lấy ds gói vé gia đình từ firestone
     React.useEffect(() => {
         onSnapshot(ticketFamilyPackageCollection, (snapshot: QuerySnapshot<DocumentData>) => {
             setTicketFamilyPackage(
@@ -88,9 +89,11 @@ const FamilyTicket: React.FC = () => {
             )
         })
     }, [])
-    React.useEffect(()=>{
-        dispatch(getTicketFamilyPackage({list:ticketFamilyPackage!}));
+    //gán danh sách gói vé gia đình vào redux
+    React.useEffect(() => {
+        dispatch(getTicketFamilyPackage({ list: ticketFamilyPackage! }));
     })
+    //columns
     const columns: ColumnsType<TicketFamilyPackage> = [
         {
             title: 'STT',
@@ -168,29 +171,31 @@ const FamilyTicket: React.FC = () => {
             key: 'options',
             render: (_, record) => (
                 <Space>
-                    <Popover content={(
-                        <Space direction='vertical'>
-                            <Button type='ghost' onClick={() => handleUpdateStatus(record.key!)}>
-                                <Text strong>
-                                    Sử dụng vé
-                                </Text>
-                            </Button>
-                            <Button type='ghost' onClick={() => setChangeDateModalOpen(true)}>
-                                <Text strong>
-                                    Đổi ngày sử dụng
-                                </Text>
-                            </Button>
-                            <ChangeDateModal
-                                visible={changeDateModalOpen}
-                                type='Family'
-                                onCancel={() => setChangeDateModalOpen(false)}
-                                onClose={() => setChangeDateModalOpen(false)}
-                                data={record}
-                                handleChangeDate={(key, hanSuDung) => handleChangeDate(key, hanSuDung)} />
-                        </Space>
-                    )} trigger={'hover'} color='#FFD2A8' placement='topRight'>
-                        <MoreOutlined />
-                    </Popover>
+                    {record.tinhTrangSuDung.toString().includes('Chưa sử dụng') ?
+                        <Popover content={(
+                            <Space direction='vertical'>
+                                <Button type='ghost' onClick={() => handleUpdateStatus(record.key!)}>
+                                    <Text strong>
+                                        Sử dụng vé
+                                    </Text>
+                                </Button>
+                                <Button type='ghost' onClick={() => setChangeDateModalOpen(true)}>
+                                    <Text strong>
+                                        Đổi ngày sử dụng
+                                    </Text>
+                                </Button>
+                                <ChangeDateModal
+                                    visible={changeDateModalOpen}
+                                    type='Family'
+                                    onCancel={() => setChangeDateModalOpen(false)}
+                                    onClose={() => setChangeDateModalOpen(false)}
+                                    data={record}
+                                    handleChangeDate={(key, hanSuDung) => handleChangeDate(key, hanSuDung)} />
+                            </Space>
+                        )} trigger={'hover'} color='#FFD2A8' placement='topRight'>
+                            <MoreOutlined />
+                        </Popover>
+                        : null}
                 </Space>
             )
         }
@@ -236,7 +241,7 @@ const FamilyTicket: React.FC = () => {
                         pagination={{ pageSize: 7, position: ['bottomCenter'] }}
                         size='middle'
                         columns={columns}
-                        dataSource={data.ticketEventList}
+                        dataSource={data.ticketEventList!}
                         rowClassName={(record, index) => index % 2 === 0 ? 'table-row-light' : 'table-row-dark'} />
                 </Space>
                 <Modal
@@ -266,10 +271,7 @@ const FamilyTicket: React.FC = () => {
                                     <Text>Từ ngày</Text>
                                     <Form.Item
                                         name={'tuNgay'}>
-                                        <DatePicker
-                                            format={'YYYY/MM/DD'}
-                                        // onChange={(date, dateString) => { setFilter({ ...filter, tuNgay: dateString }) }} 
-                                        />
+                                        <DatePicker format={dateFormat}/>
                                     </Form.Item>
                                 </div>
                             </Col>
@@ -278,10 +280,7 @@ const FamilyTicket: React.FC = () => {
                                     <Text>Đến ngày</Text>
                                     <Form.Item
                                         name={'denNgay'}>
-                                        <DatePicker
-                                            format={"YYYY/MM/DD"}
-                                        // onChange={(date, dateString) => setFilter({ ...filter, denNgay: dateString })} 
-                                        />
+                                        <DatePicker format={dateFormat} />
                                     </Form.Item>
                                 </div>
                             </Col>

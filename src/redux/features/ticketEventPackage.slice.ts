@@ -1,6 +1,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { TicketEventPackage } from "../../types/type";
 import { updateDateEventTicket, updateStatusEventTicket } from "../../firebase/controller";
+import dayjs from "dayjs";
 
 interface TicketEventPackageState {
     ticketEventList: TicketEventPackage[]
@@ -44,6 +45,7 @@ const ticketEventPackageSlice = createSlice({
             state.ticketEventList.some((ticketEvent,index)=>{
                 if(ticketEvent.key === id){
                     state.ticketEventList[index].tinhTrangSuDung = 'Đã sử dụng';
+                    state.ticketEventList[index].ngaySuDung = dayjs().format('YYYY/MM/DD').toString();
                     updateStatusEventTicket(id);
                     return true;
                 }

@@ -1,6 +1,8 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import {TicketFamilyPackage} from '../../types/type';
 import { updateDateFamilyTicket } from '../../firebase/controller';
+import dayjs from 'dayjs';
+import { updateStatusFamilyTicket } from '../../firebase/controller';
 
 const ticketFamilyPackage:TicketFamilyPackage = {
     bookingCode:'',
@@ -43,6 +45,8 @@ const ticketFamilyPackageSlice = createSlice({
             state.ticketEventList.some((data,index)=>{
                 if(data.key === id){
                     state.ticketEventList[index].tinhTrangSuDung = 'Đã sử dụng';
+                    state.ticketEventList[index].ngaySuDung = dayjs().format('YYYY/MM/DD').toString();
+                    updateStatusFamilyTicket(id);
                     return true;
                 }
                 return false;

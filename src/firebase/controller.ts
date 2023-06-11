@@ -1,6 +1,7 @@
-import { addDoc, collection, doc, getCountFromServer, query, updateDoc, where, } from "firebase/firestore";
+import { addDoc, collection, doc, updateDoc, } from "firebase/firestore";
 import { TicketPackage } from "../types/type";
 import { db } from "./fbConfig";
+import dayjs from "dayjs";
 
 export const ticketPackageCollection = collection(db, "PackageTicket");
 export const ticketEventPackageCollection = collection(db, "TicketEventPackage");
@@ -53,23 +54,27 @@ export const updateDateEventTicket = async (key: string, hanSuDung: string) => {
 export const updateStatusEventTicket = async (key: string) => {
     const ref = doc(ticketEventPackageCollection, key);
     await updateDoc(ref, {
-        tinhTrangSuDung: 'Đã sử dụng'
+        tinhTrangSuDung: 'Đã sử dụng',
+        ngaySuDung: dayjs().format('YYYY/MM/DD').toString()
     }).then(() => {
-        alert('Cập nhật thành công 1!');
+        alert('Cập nhật thành công!');
     }).catch((err) => {
         alert('Lỗi: ' + err);
     })
 }
-export const getUnusedTicketFamilyPackage = async () => {
-    const q = query(ticketFamilyPackageCollection, where("tinhTrangSuDung", "==", "Chưa sử dụng"));
-    const snapshot = await getCountFromServer(q);
-    let count: number = snapshot.data().count;
-    return count;
-}
-export function getUsedTicketFamilyPackage() {
-    async function callAsync() {
-        const q = query(ticketFamilyPackageCollection, where("tinhTrangSuDung", "==", "Đã sử dụng"));
-        return (await getCountFromServer(q)).data().count;
-    }
-    callAsync();
+export const updateTicketPackages = async (key: string, ticketPackage: TicketPackage) => {
+    const ref = doc(ticketPackageCollection, key);
+    await updateDoc(ref, {
+        maGoi: ticketPackage.maGoi,
+        tenGoiVe: ticketPackage.tenGoiVe,
+        ngayApDung: ticketPackage.ngayApDung,
+        ngayHetHan: ticketPackage.ngayHetHan,
+        giaVe: ticketPackage.giaVe,
+        giaCombo: ticketPackage.giaCombo,
+        tinhTrang: ticketPackage.tinhTrang
+    }).then(() => {
+        alert('Cập nhật thành công!');
+    }).catch((err) => {
+        alert('Lỗi: ' + err);
+    })
 }

@@ -24,7 +24,7 @@ const dateFormat = 'YYYY/MM/DD';
 const { Text } = Typography;
 const EventTicket: React.FC = () => {
   const dispatch = useAppDispatch();
-  const data = useAppSelector((state)=>state.ticketEventPackageSlice);
+  const data = useAppSelector((state) => state.ticketEventPackageSlice);
 
   const [searchValue, setSearchValue] = React.useState<string>("");
   const [disabled, setDisabled] = React.useState<boolean>(true);
@@ -34,7 +34,7 @@ const EventTicket: React.FC = () => {
   //filter để lọc vé
   const [filter, setFilter] = React.useState<Filter>({
     tuNgay: '01/01/2001',
-    denNgay: dayjs().format('YYYY/MM/DD').toString(),
+    denNgay: dayjs().format(dateFormat).toString(),
     tinhTrangSuDung: 'Tất cả',
     congCheckIn: ['Tất cả']
   });
@@ -42,8 +42,8 @@ const EventTicket: React.FC = () => {
   const handleFinish = (fieldValues: any) => {
     const values = {
       ...fieldValues,
-      'tuNgay': fieldValues['tuNgay'].format('YYYY/MM/DD'),
-      'denNgay': fieldValues['denNgay'].format('YYYY/MM/DD'),
+      'tuNgay': fieldValues['tuNgay'].format(dateFormat),
+      'denNgay': fieldValues['denNgay'].format(dateFormat),
       'tinhTrangSuDung': fieldValues['tinhTrangSuDung'],
       'congCheckIn': fieldValues['congCheckIn']
     }
@@ -71,15 +71,15 @@ const EventTicket: React.FC = () => {
 
   //cập nhật ngày sử dụng
   const handleChangeDate = (key: string, hanSuDung: string) => {
-    dispatch(updateDateTicketEventPackage({key:key,hanSuDung:hanSuDung}));
+    dispatch(updateDateTicketEventPackage({ key: key, hanSuDung: hanSuDung }));
     setChangeDateModalOpen(false);
   }
 
   //cập nhật tình trạng sử dụng
   const handleUpdateEventTicketStatus = (key: string) => {
-    dispatch(updateStatusTicket({key:key}));
+    dispatch(updateStatusTicket({ key: key }));
   }
-  
+
   React.useEffect(() => {
     onSnapshot(ticketEventPackageCollection, (snapshot: QuerySnapshot<DocumentData>) => {
       setTicketEventPackage(
@@ -93,8 +93,8 @@ const EventTicket: React.FC = () => {
     })
   }, []);
 
-  React.useEffect(()=>{
-    dispatch(getListTicketEventPackage({list:ticketEventPackage!}));
+  React.useEffect(() => {
+    dispatch(getListTicketEventPackage({ list: ticketEventPackage! }));
   });
   //columns table
   const columns: ColumnsType<TicketEventPackage> = [
@@ -151,11 +151,11 @@ const EventTicket: React.FC = () => {
       key: 'ngaySuDung',
       filteredValue: [filter.tuNgay],
       onFilter: (value: any, record) => {
-        var ngaySuDung = new Date(record.ngaySuDung?.toString()!);
-        var tuNgay = new Date(value.toString());
-        var denNgay = new Date(filter.denNgay.toString());
+        let tuNgay = new Date(value.toString());
+        let denNgay = new Date(filter.denNgay.toString());
+        let ngaySuDung = new Date(record.ngaySuDung?.toString()!);
         return tuNgay.valueOf() <= ngaySuDung.valueOf() && ngaySuDung.valueOf() <= denNgay.valueOf();
-      }
+      },
     },
     {
       title: 'Ngày xuất vé',
@@ -179,6 +179,7 @@ const EventTicket: React.FC = () => {
       key: 'options',
       render: (_, record) => (
         <Space>
+          {record.tinhTrangSuDung.toString().includes('Chưa sử dụng') ? 
           <Popover content={(
             <Space direction='vertical'>
               <Button type='ghost' onClick={() => handleUpdateEventTicketStatus(record.key!)}>
@@ -201,12 +202,13 @@ const EventTicket: React.FC = () => {
             </Space>
           )} trigger={'hover'} color='#FFD2A8' placement='topRight'>
             <MoreOutlined />
-          </Popover>
+          </Popover>:
+          null}
         </Space>
       )
     }
   ]
-  
+
   return (
     <ConfigProvider
       theme={{
@@ -277,9 +279,7 @@ const EventTicket: React.FC = () => {
                   <Form.Item
                     name={'tuNgay'}>
                     <DatePicker
-                      format={'YYYY/MM/DD'}
-                    // onChange={(date, dateString) => { setFilter({ ...filter, tuNgay: dateString }) }} 
-                    />
+                      format={dateFormat}/>
                   </Form.Item>
                 </div>
               </Col>
@@ -289,9 +289,7 @@ const EventTicket: React.FC = () => {
                   <Form.Item
                     name={'denNgay'}>
                     <DatePicker
-                      format={"YYYY/MM/DD"}
-                    // onChange={(date, dateString) => setFilter({ ...filter, denNgay: dateString })} 
-                    />
+                      format={dateFormat} />
                   </Form.Item>
                 </div>
               </Col>
@@ -337,7 +335,6 @@ const EventTicket: React.FC = () => {
             <Row justify={'center'}>
               <Button htmlType='submit'>Lọc</Button>
             </Row>
-            {/* </Space> */}
           </Form>
         </Modal>
       </Layout>

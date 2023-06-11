@@ -27,7 +27,7 @@ const DonutChart = (props: DonutProps) => {
         labels: ['Vé chưa sử dụng', 'Vé đã sử dụng'],
         datasets: [
             {
-                label: 'Gói gia đình',
+                label: props.title,
                 data: [props.data.unused, props.data.used],
                 backgroundColor: [
                     '#FF8A48',

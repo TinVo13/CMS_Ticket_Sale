@@ -3,6 +3,7 @@ import ticketPackageSlice from "./features/ticketPackage.slice";
 import ticketCheckSlice from "./features/ticketCheck.slice";
 import ticketEventPackageSlice from "./features/ticketEventPackage.slice";
 import ticketFamilyPackageSlice from "./features/ticketFamilyPackage.slice";
+import editTicketPackageSlice from "./features/editTicketPackage.slice";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import thunk from "redux-thunk";
 
@@ -11,7 +12,8 @@ export const store = configureStore({
         ticketPackageSlice,
         ticketCheckSlice,
         ticketEventPackageSlice,
-        ticketFamilyPackageSlice
+        ticketFamilyPackageSlice,
+        editTicketPackageSlice
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(thunk),
 })

@@ -54,7 +54,6 @@ export interface TicketCheckType {
 }
 
 export interface TicketPackageType {
-    key: string,
     maGoi: string,
     tenGoiVe: string,
     ngayApDung: string,
@@ -71,7 +70,7 @@ export interface TicketPackage {
     ngayHetHan?: string,
     giaVe?: string,
     giaCombo?: string,
-    tinhTrang?: string
+    tinhTrang?: any
 }
 export interface Data {
     used:number,
